@@ -1,0 +1,26 @@
+body, html {
+    width: 100%;
+    height: 100%;
+    font-family: "Microsoft YaHei" !important; 
+    color: rgba(47, 48, 49, 1.000);
+}
+
+section, div, button {
+    font-family: "Microsoft YaHei" !important; 
+    font-weight: normal;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+a{ 
+    text-decoration:none; 
+    color:inherit; 
+    font-weight: inherit;
+} 
+
+.floating-box .prompt {
+    font-size: .8vw;
+}
