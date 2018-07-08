@@ -11,7 +11,6 @@
 <script>
 import MainMenu from "./components/MainMenu";
 import OrderMenu from "./components/OrderMenu";
-console.log({ MainMenu });
 
 export default {
   name: "navigatorLeft",
@@ -30,6 +29,14 @@ export default {
   methods: {
     toggleMenu(menuType) {
       this.menuType = menuType;
+    }
+  },
+
+  watch: {
+    "$route.name"(val) {
+      if (val !== "form-page") {
+        this.toggleMenu("mainMenu");
+      }
     }
   }
 };

@@ -1,28 +1,32 @@
 <template>
-    <section class="layer" v-if="showLayer">
+    <section class="layer">
         <div class="mb"></div>
         <div class="layer-container">
             <div class="layer-title">
                 <p>{{title}}</p>
-                <span class="close-btn" @click="showLayer = false">X</span>
+                <span class="close-btn" @click="operatingLayer">X</span>
             </div>
             <div class="layer-content">
                 <slot></slot>
             </div>
             <div class="layer-operations">
-                <el-button v-if="cancel" @click="showLayer = false">{{cancel}}</el-button>
-                <el-button v-if="confirm" type="primary">{{confirm}}</el-button>
+                <el-button v-if="cancel" @click="btnHandler(false)">{{cancel}}</el-button>
+                <el-button v-if="confirm" type="primary" @click="btnHandler(true)">{{confirm}}</el-button>
             </div>
         </div>
     </section>
 </template>
 <script>
+import {
+  mapActions
+} from "vuex";
+
 export default {
   name: "layer",
 
   data() {
     return {
-      showLayer: true
+      
     };
   },
 
@@ -38,6 +42,17 @@ export default {
     confirm: {
       type: String,
       default: "确定"
+    }
+  },
+
+  methods: {
+    ...mapActions([
+      'operatingLayer'
+    ]),
+
+    btnHandler(val) {
+      this.operatingLayer();
+      this.$emit("btnHandler", val);
     }
   }
 };

@@ -4,7 +4,7 @@
         <p class="prompt">请选择商品数量</p>
         <div class="count-container">
             <div class="add">+</div>
-            <div class="count">1</div>
+            <div class="count">{{count}}</div>
             <div class="desc">-</div>
         </div>
         <div class="calculator-container">
@@ -20,6 +20,12 @@ export default {
 
   components: {
     Calculator
+  },
+
+  computed: {
+    count() {
+      return this.$store.state.common.calculatorVal;
+    }
   }
 };
 </script>

@@ -3,11 +3,11 @@
         <h1 class="identity-title">身份选择</h1>
         <div>
             <p class="prompt">会员认证</p>
-            <el-button type="primary">会员认证</el-button>
+            <el-button type="primary" @click="orderOperation($parent.operationType.ensureMember)">会员认证</el-button>
         </div>
         <div>
             <p class="prompt">桌号认证</p>
-            <el-button type="primary">桌号认证</el-button>
+            <el-button type="primary" @click="orderOperation($parent.operationType.ensureSeat)">桌号认证</el-button>
         </div>
     </section>
 </template>

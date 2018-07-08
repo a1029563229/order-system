@@ -1,61 +1,75 @@
 <template>
-    <section class="order-menu">
-        <div class="order-header">
-            <div class="flex-between order-options">
-                <div>
-                      <el-button type="primary" @click="toggleMenu('mainMenu')">菜单</el-button>
-                </div>
-                <div class="button-options flex-left">
-                      <el-button type="primary">挂单</el-button>
-                      <el-badge :value="12" class="item">
-                        <el-button type="primary">取单</el-button>
-                      </el-badge>
-                      <el-button type="primary">取消</el-button>
-                </div>
-            </div>
-            <div class="nickname" @click="chooseOperationByName('MEMBER')">
-                <span>微信昵称：</span>    
-                <p>超长超长超长超长超长超长超长超长超长超长</p>
-            </div>
-        </div>
-        <div class="order-container">
-            <div class="order-list-container">
-                <ol class="order-list">
-                    <li v-for="(goods, index) in goodsList" :key="index" :class="{'active': activeGoodsIndex === index}" @click="activeGoodsIndex = index">
-                        <span class="goods-name">这里是商品名称</span>
-                        <span>350ml</span>
-                        <span class="goods-price">￥20.80</span>
-                        <span class="goods-num">x1</span>
-                    </li>
-                </ol>
-                <div class="price-total">
-                    共 {{goodsList.length}} 项   ￥20.80
-                </div>
-            </div>
-            <div class="order-operations">
-                <el-button plain v-for="(operation, index) in operations" 
-                :key="index" 
-                @click="chooseOperationByIndex(index)" 
-                :class="{'active': currentOperation === operation.identifier}">{{operation.name}}</el-button>
-            </div>
-        </div>
-        <el-button class="payment" type="primary">收银￥12.00</el-button>
-        <transition name="order-operation-transition"
-            enter-active-class="animated fadeIn"
-            leave-active-class="animated fadeOut">
-          <section class="floating-box" v-if="currentOperation !== '' && currentOperation !== 'DELETE'">
-            <goods-count v-if="currentOperation === 'COUNT'"></goods-count>
-            <goods-sku v-if="currentOperation === 'SKU'"></goods-sku>
-            <goods-remark v-if="currentOperation === 'REMARK'"></goods-remark>
-            <goods-seat v-if="currentOperation === 'SEAT'"></goods-seat>
-            <member-validate v-if="currentOperation === 'MEMBER'"></member-validate>
-            <ensure-identity v-if="currentOperation === ensureType.identity"></ensure-identity>
-            <ensure-order v-if="currentOperation === ensureType.order"></ensure-order>
-            <ensure-member v-if="currentOperation === ensureType.member"></ensure-member>
-            <ensure-seat v-if="currentOperation === ensureType.seat"></ensure-seat>
-            <div class="floating-close" @click="clearOperation">X</div>
-            <el-button class="ensure-btn" type="primary">确认</el-button>
-        </section>
+  <section class="order-group">
+      <section class="order-menu">
+          <div class="order-header">
+              <div class="flex-between order-options">
+                  <div>
+                        <el-button type="primary" @click="toggleMenu('mainMenu')">菜单</el-button>
+                  </div>
+                  <div class="button-options flex-left">
+                        <el-button type="primary" @click="locationHref('/order')">挂单</el-button>
+                        <el-badge :value="12" class="item">
+                          <el-button type="primary" @click="locationHref('/order')">取单</el-button>
+                        </el-badge>
+                        <el-button type="primary" @click="toggleMenu('mainMenu')">取消</el-button>
+                  </div>
+              </div>
+              <div class="nickname" @click="switchOperation(operationType.validate)">
+                  <span>微信昵称：</span>    
+                  <p>超长超长超长超长超长超长超长超长超长超长</p>
+              </div>
+          </div>
+          <div class="order-container">
+              <div class="order-list-container">
+                  <ol class="order-list">
+                      <li v-for="(goods, index) in goodsList" :key="index" :class="{'active': activeGoodsIndex === index}" @click="activeGoodsIndex = index">
+                          <span class="goods-name">这里是商品名称</span>
+                          <span>350ml</span>
+                          <span class="goods-price">￥20.80</span>
+                          <span class="goods-num">x1</span>
+                      </li>
+                  </ol>
+                  <div class="price-total">
+                      共 {{goodsList.length}} 项   ￥20.80
+                  </div>
+              </div>
+              <div class="order-operations">
+                  <el-button plain v-for="(operation, index) in operations" 
+                  :key="index" 
+                  @click="chooseOperationByIndex(index)" 
+                  :class="{'active': currentOperation === operation.identifier}">{{operation.name}}</el-button>
+              </div>
+          </div>
+          <el-button class="payment" type="primary" @click="switchOperation(operationType.ensureIdentity)">收银￥12.00</el-button>
+          <transition name="order-operation-transition"
+              enter-active-class="animated fadeIn"
+              leave-active-class="animated fadeOut">
+            <section class="floating-box" v-if="currentOperation !== '' && currentOperation !== operationType.remove">
+              <goods-count v-if="currentOperation === operationType.count"></goods-count>
+              <goods-sku v-if="currentOperation === operationType.sku"></goods-sku>
+              <goods-remark v-if="currentOperation === operationType.remark"></goods-remark>
+              <goods-seat v-if="currentOperation === operationType.seat"></goods-seat>
+              <member-validate v-if="currentOperation === operationType.validate"></member-validate>
+              <ensure-identity v-if="currentOperation === operationType.ensureIdentity" @orderOperation="switchOperation"></ensure-identity>
+              <ensure-order v-if="currentOperation === operationType.ensureOrder"></ensure-order>
+              <ensure-member v-if="currentOperation === operationType.ensureMember"></ensure-member>
+              <ensure-seat v-if="currentOperation === operationType.ensureSeat"></ensure-seat>
+              <div class="floating-close" @click="clearOperation">X</div>
+              <el-button class="ensure-btn" type="primary" @click="operationHandler">确认</el-button>
+          </section>
+        </transition>
+          <transition name="order-operation-transition"
+              enter-active-class="animated fadeIn"
+              leave-active-class="animated fadeOut">
+            <member-pay-way v-if="currentLayerType === layerType.payWay" @memberOperation="evokeLayer"></member-pay-way>
+            <member-pay-code v-if="currentLayerType === layerType.payCode" @memberOperation="evokeLayer"></member-pay-code>
+            <member-pay-result v-if="currentLayerType === layerType.payResult"></member-pay-result>
+          </transition>
+      </section>
+      <transition name="order-operation-transition"
+          enter-active-class="animated fadeIn"
+          leave-active-class="animated fadeOut">
+        <div class="order-mb" v-if="currentOperation !== '' && currentOperation !== operationType.remove"></div>
       </transition>
     </section>
 </template>
@@ -71,7 +85,12 @@ import {
   EnsureMember,
   EnsureSeat
 } from "./components";
-import { setTimeout, setInterval } from "timers";
+
+import {
+  MemberPayWay,
+  MemberPayCode,
+  MemberPayResult
+} from "@/components/member";
 
 export default {
   name: "orderMenu",
@@ -99,16 +118,23 @@ export default {
         },
         {
           name: "删除",
-          identifier: "DELETE"
+          identifier: "REMOVE"
         }
       ],
-      ensureType: {
-        identity: "IDENTITY",
-        order: "ORDER",
-        member: "MEMBER",
-        seat: "ENSURE_SEAT",
+      operationType: {
+        count: "COUNT",
+        sku: "SKU",
+        remark: "REMARK",
+        seat: "SEAT",
+        remove: "REMOVE",
+        validate: "VALIDATE",
+        ensureIdentity: "ENSURE_IDENTITY",
+        ensureOrder: "ENSURE_ORDER",
+        ensureMember: "ENSURE_MEMBER",
+        ensureSeat: "ENSURE_SEAT"
       },
-      currentOperation: "ENSURE_SEAT",
+      currentOperation: "COUNT",
+      previousOperation: ""
     };
   },
 
@@ -121,7 +147,12 @@ export default {
     EnsureIdentity,
     EnsureOrder,
     EnsureMember,
-    EnsureSeat
+    EnsureSeat,
+    MemberPayWay,
+    MemberPayResult,
+    MemberPayWay,
+    MemberPayCode,
+    MemberPayResult
   },
 
   methods: {
@@ -129,12 +160,41 @@ export default {
       this.currentOperation = this.operations[index].identifier;
     },
 
-    chooseOperationByName(identifier) {
-      this.currentOperation = identifier;
+    switchOperation(operation) {
+      this.previousOperation = this.currentOperation;
+      this.currentOperation = operation;
     },
 
     clearOperation() {
       this.currentOperation = "";
+    },
+
+    operationHandler() {
+      const prevOperations = [
+        this.operationType.ensureMember,
+        this.operationType.ensureSeat
+      ];
+
+      if (
+        this.include(prevOperations, this.currentOperation) &&
+        this.previousOperation
+      ) {
+        this.switchOperation(this.previousOperation);
+        return;
+      }
+
+      switch (this.currentOperation) {
+        default:
+          this.clearOperation();
+          break;
+        case this.operationType.ensureIdentity:
+          this.switchOperation(this.operationType.ensureOrder);
+          break;
+        case this.operationType.ensureOrder:
+          this.clearOperation();
+          this.evokeLayer(this.layerType.payWay);
+          break;
+      }
     }
   }
 };
@@ -148,11 +208,16 @@ export default {
   box-sizing: inherit;
 }
 
+.order-group {
+  height: 100%;
+}
+
 .order-menu {
   width: 30vw;
   height: 100%;
   background: #f5f5f5;
   position: relative;
+  z-index: 10;
   .order-header {
     height: 100px;
     box-sizing: border-box;
@@ -268,7 +333,7 @@ export default {
     background: @blue;
     width: 90%;
     margin: 0 auto;
-    margin-top: 15px;
+    margin-top: 10px;
   }
 
   .floating-box {
@@ -297,6 +362,16 @@ export default {
       left: 20%;
     }
   }
+}
+
+.order-mb {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
 }
 
 .animated {

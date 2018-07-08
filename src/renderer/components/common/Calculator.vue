@@ -1,16 +1,80 @@
 <template>
     <section class="flex-between calculator-container">
-          <el-button plain v-for="(control, index) in controls" :key="index">{{control}}</el-button>
+          <el-button plain v-for="(key, index) in keys" :key="index" @click="calculatorInputHandler(key)">{{key}}</el-button>
     </section>
 </template>
 <script>
+import { mapActions } from "vuex";
+
 export default {
   name: "calculator",
 
   data() {
     return {
-      controls: [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, ".", "delete"]
+      input: null,
+      keys: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ".", "delete"]
     };
+  },
+
+  props: {
+    id: {
+      type: String,
+      default: "calculator"
+    }
+  },
+
+  methods: {
+    ...mapActions(["setCalculatorVal", "clearCalculatorVal"]),
+
+    calculatorInputHandler(key) {
+      switch (key) {
+        default:
+          this.setInputVal(key);
+          break;
+        case ".":
+          this.setDecimalPoint(key);
+          break;
+        case "delete":
+          this.deleteInputVal();
+          break;
+      }
+    },
+
+    setInputVal(val) {
+      this.setCalculatorVal(this.calculatorVal + val);
+    },
+
+    setDecimalPoint(key) {
+      if (this.include(this.calculatorVal, ".") || !this.calculatorVal.length) {
+        return;
+      }
+
+      this.setInputVal(key);
+    },
+
+    deleteInputVal() {
+      if (!this.calculatorVal.length) {
+        return;
+      }
+
+      this.setCalculatorVal(
+        this.calculatorVal.slice(0, this.calculatorVal.length - 1)
+      );
+    }
+  },
+
+  computed: {
+    calculatorVal() {
+      return this.$store.state.common.calculatorVal;
+    }
+  },
+
+  mounted() {
+    console.log(this);
+  },
+
+  destroyed() {
+    this.clearCalculatorVal();
   }
 };
 </script>

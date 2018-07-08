@@ -1,7 +1,7 @@
 <template>
-    <layer title="选择充值的会员" confirm="去充值">
+    <layer title="选择充值的会员" confirm="去充值" @btnHandler="btnHandler">
         <div class="member-recharge">
-            <el-input placeholder="请输入手机号/会员号或者扫码识别" v-model="ruleForm.name" type="number"></el-input>
+            <el-input placeholder="请输入手机号/会员号或者扫码识别" v-model="phone" type="string"></el-input>
             <calculator class="calculator"></calculator>
         </div>
     </layer>
@@ -15,59 +15,27 @@ export default {
 
   data() {
     return {
-      ruleForm: {
-        name: "",
-        region: "",
-        date1: "",
-        date2: "",
-        delivery: false,
-        type: [],
-        resource: "",
-        desc: ""
-      },
-      rules: {
-        name: [
-          { required: true, message: "手机号为必填项", trigger: "blur" },
-          { min: 3, max: 5, message: "长度在 3 到 5 个字符", trigger: "blur" }
-        ],
-        region: [
-          { required: true, message: "请选择活动区域", trigger: "change" }
-        ],
-        date1: [
-          {
-            type: "date",
-            required: true,
-            message: "请选择日期",
-            trigger: "change"
-          }
-        ],
-        date2: [
-          {
-            type: "date",
-            required: true,
-            message: "请选择时间",
-            trigger: "change"
-          }
-        ],
-        type: [
-          {
-            type: "array",
-            required: true,
-            message: "请至少选择一个活动性质",
-            trigger: "change"
-          }
-        ],
-        resource: [
-          { required: true, message: "请选择活动资源", trigger: "change" }
-        ],
-        desc: [{ required: true, message: "请填写活动形式", trigger: "blur" }]
-      }
-    };
+
+    }
   },
 
   components: {
     Layer,
     Calculator
+  },
+
+  methods: {
+    btnHandler(val) {
+      if (val) {
+        this.memberOperation(this.$parent.layerType.rechargeCount);
+      }
+    }
+  },
+
+  computed: {
+    phone() {
+      return this.$store.state.common.calculatorVal;
+    }
   }
 };
 </script>

@@ -2,7 +2,7 @@
     <section class="reservation-container">
         <section class="reservation-header">
           <div class="reservation-operation">
-            <el-button type="warning" @click="evokeLayer(layerType.add)">新增预约</el-button>
+            <el-button type="warning" @click="evokeLayer(layerType.addReservation)">新增预约</el-button>
           </div>
           <div class="reservation-statistics">
             今日预约 <span>15</span> 个
@@ -110,16 +110,16 @@
             </el-table>
         </template>
         <pagination></pagination>
-        <template>
-          <reservation-add v-if="currentLayerType === layerType.add"></reservation-add>
-        </template>
+        <transition name="order-operation-transition"
+            enter-active-class="animated fadeIn"
+            leave-active-class="animated fadeOut">
+            <reservation-add v-if="currentLayerType === layerType.addReservation"></reservation-add>
+        </transition>
     </section>
 </template>
 <script>
 import Pagination from "@/components/common/pagination.vue";
-import {
-  ReservationAdd
-} from "@/components/reservation";
+import { ReservationAdd } from "@/components/reservation";
 
 export default {
   name: "reservation",
@@ -177,13 +177,7 @@ export default {
         }
       ],
 
-      multipleSelection: [],
-
-      layerType: {
-        add: "ADD"
-      },
-
-      currentLayerType: ""
+      multipleSelection: []
     };
   },
 
@@ -199,10 +193,6 @@ export default {
 
     handleSelectionChange(val) {
       this.multipleSelection = val;
-    },
-
-    evokeLayer(layerType) {
-      this.currentLayerType = layerType;
     }
   },
 
@@ -264,6 +254,10 @@ export default {
     max-height: 55vh;
     overflow-y: auto;
   }
+}
+
+.animated {
+  animation-duration: .3s;
 }
 </style>
 

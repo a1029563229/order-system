@@ -1,5 +1,5 @@
 <template>
-    <layer title="确认支付" confirm="去充值">
+    <layer title="确认支付" confirm="充值完成">
         <div class="member-pay-result">
             <div class="pay-by-cash" v-if="currentPayType === payType.cash">
                 <div class="recharge-item">

@@ -1,5 +1,5 @@
 <template>
-    <layer title="新增会员" confirm="确认注册新会员">
+    <layer title="新增会员" confirm="确认注册新会员" @btnHandler="btnHandler">
         <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
             <el-form-item label="手机号" prop="name">
                 <el-input v-model="ruleForm.name" type="number"></el-input>
@@ -85,6 +85,12 @@ export default {
 
   components: {
     Layer
+  },
+
+  methods: {
+    btnHandler(val) {
+
+    }
   }
 };
 </script>

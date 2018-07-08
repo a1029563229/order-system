@@ -64,7 +64,7 @@ export default {
 }
 
 .member-info {
-  margin-top: 3vw;
+  margin-top: 2.5vw;
   li {
     font-size: 14px;
     .flex-between;

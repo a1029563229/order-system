@@ -97,16 +97,18 @@
             </el-table>
         </template>
         <pagination></pagination>
-        <template>
+        <transition name="order-operation-transition"
+            enter-active-class="animated fadeIn"
+            leave-active-class="animated fadeOut">
           <member-register v-if="currentLayerType === layerType.register"></member-register>
-          <member-recharge v-if="currentLayerType === layerType.recharge"></member-recharge>
-          <member-recharge-count v-if="currentLayerType === layerType.rechargeCount"></member-recharge-count>
-          <member-pay-way v-if="currentLayerType === layerType.payWay"></member-pay-way>
-          <member-pay-code v-if="currentLayerType === layerType.payCode"></member-pay-code>
+          <member-recharge v-if="currentLayerType === layerType.recharge" @memberOperation="evokeLayer"></member-recharge>
+          <member-recharge-count v-if="currentLayerType === layerType.rechargeCount" @memberOperation="evokeLayer"></member-recharge-count>
+          <member-pay-way v-if="currentLayerType === layerType.payWay" @memberOperation="evokeLayer"></member-pay-way>
+          <member-pay-code v-if="currentLayerType === layerType.payCode" @memberOperation="evokeLayer"></member-pay-code>
           <member-pay-result v-if="currentLayerType === layerType.payResult"></member-pay-result>
           <member-pay-order v-if="currentLayerType === layerType.payOrder"></member-pay-order>
           <member-info v-if="currentLayerType === layerType.info"></member-info>
-        </template>
+        </transition>
     </section>
 </template>
 <script>
@@ -178,20 +180,7 @@ export default {
         }
       ],
 
-      multipleSelection: [],
-
-      layerType: {
-        register: "REGISTER",
-        recharge: "RECHARGE",
-        rechargeCount: "RECHARGE_COUNT",
-        payWay: "PAY_WAY",
-        payCode: "PAY_CODE",
-        payResult: "PAY_RESULT",
-        payOrder: "PAY_ORDER",
-        info: "INFO",
-      },
-
-      currentLayerType: ""
+      multipleSelection: []
     };
   },
 
@@ -214,10 +203,6 @@ export default {
 
     handleSelectionChange(val) {
       this.multipleSelection = val;
-    },
-
-    evokeLayer(layerType) {
-      this.currentLayerType = layerType;
     }
   },
 
@@ -279,6 +264,10 @@ export default {
     max-height: 55vh;
     overflow-y: auto;
   }
+}
+
+.animated {
+  animation-duration: 0.3s;
 }
 </style>
 
