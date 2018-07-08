@@ -1,15 +1,15 @@
 <template>
-    <layer title="确认充值账户和充值金额" confirm="去充值">
-        <div class="member-recharge">
+    <layer title="确认充值账户和充值金额" confirm="会员支付" cancel="立即支付">
+        <div class="member-info">
             <div class="recharge-item">
-                <span>会员号码</span>
-                <span>18244913996</span>
+                <span>桌号</span>
+                <span>华山</span>
             </div> 
             <div class="recharge-item">
-                <span>账户余额</span>
+                <span>订单金额</span>
                 <span>￥800.00</span>
             </div> 
-            <el-input placeholder="请输入充值金额" v-model="ruleForm.name" type="number"></el-input>
+            <el-input placeholder="请输入会员号或者手机号码" v-model="ruleForm.name" type="number"></el-input>
             <calculator class="calculator"></calculator>
         </div>
     </layer>
@@ -19,7 +19,7 @@ import Layer from "@/components/common/Layer.vue";
 import Calculator from "@/components/common/Calculator.vue";
 
 export default {
-  name: "memberRechargeCount",
+  name: "memberInfo",
 
   data() {
     return {
@@ -80,7 +80,7 @@ export default {
 };
 </script>
 <style lang="less" scoped>
-    .member-recharge {
+    .member-info {
         .calculator {
             margin-top: 50px;
         }

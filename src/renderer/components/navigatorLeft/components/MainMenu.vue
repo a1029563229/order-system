@@ -42,6 +42,11 @@ export default {
           title: "会员中心",
           icon: "",
           route: "/member"
+        },
+        {
+          title: "预约中心",
+          icon: "",
+          route: "/reservation"
         }
       ]
     };

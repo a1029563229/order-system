@@ -67,7 +67,7 @@ export default {
       padding: 1vw;
       background: @blue;
       p {
-        font-size: 1vw;
+        font-size: 20px;
       }
       .close-btn {
         position: absolute;
@@ -76,7 +76,7 @@ export default {
       }
     }
     .layer-content {
-      padding: 2.5vw;
+      padding: 2vw;
     }
     .layer-operations {
       .flex-between;

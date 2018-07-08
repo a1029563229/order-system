@@ -1,24 +1,15 @@
 <template>
-    <section class="member-container">
-        <section class="member-header">
-          <div class="member-operation">
-            <el-button type="warning" @click="evokeLayer(layerType.register)">新增会员</el-button>
-            <el-button type="warning" @click="evokeLayer(layerType.recharge)">会员充值</el-button>
+    <section class="reservation-container">
+        <section class="reservation-header">
+          <div class="reservation-operation">
+            <el-button type="warning" @click="evokeLayer(layerType.add)">新增预约</el-button>
           </div>
-          <div class="member-classify">
-            <el-button>会员列表</el-button>
-            <el-button>会员储值记录</el-button>
-            <el-button>会员消费记录</el-button>
-          </div>
-          <div class="member-statistics">
-            共 <span>1999</span> 个会员，今日新增 <span>0</span> 个
+          <div class="reservation-statistics">
+            今日预约 <span>15</span> 个
           </div>
         </section>
         <el-form :inline="true" :model="searchForm" :rules="rules" ref="searchForm" label-width="100px" class="search-options">
-            <el-form-item label="搜索" prop="name">
-                <el-input placeholder="会员号/手机号" v-model="searchForm.name"></el-input>
-            </el-form-item>
-            <el-form-item label="开卡时间" prop="name">
+            <el-form-item label="预约时间" prop="name">
                 <el-date-picker
                 type="datetimerange"
                 range-separator="至"
@@ -26,7 +17,28 @@
                 end-placeholder="结束日期">
                 </el-date-picker>
             </el-form-item>
-            <el-form-item label="支付方式" prop="name">
+            <el-form-item label="过期否" prop="name">
+                <el-select v-model="value" placeholder="请选择">
+                    <el-option
+                    v-for="item in options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="搜索" prop="name">
+                <el-input placeholder="会员号/手机号" v-model="searchForm.name"></el-input>
+            </el-form-item>
+            <el-form-item label="起始时间" prop="name">
+                <el-date-picker
+                type="datetimerange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期">
+                </el-date-picker>
+            </el-form-item>
+            <el-form-item label="桌号" prop="name">
                 <el-select v-model="value" placeholder="请选择">
                     <el-option
                     v-for="item in options"
@@ -62,68 +74,55 @@
                 </el-table-column>
                 <el-table-column
                 prop="f"
-                label="状态">
+                label="发起人">
                 </el-table-column>
                 <el-table-column
                 prop="g"
-                label="会员昵称">
+                label="发起时间">
                 </el-table-column>
                 <el-table-column
                 prop="h"
-                label="等级">
+                label="桌号">
                 </el-table-column>
                 <el-table-column
                 prop="i"
-                label="折扣">
+                label="预约时段">
                 </el-table-column>
                 <el-table-column
                 prop="j"
-                label="余额">
+                label="预约游戏">
                 </el-table-column>
                 <el-table-column
                 prop="j"
-                label="开卡时间">
+                label="预约人数">
                 </el-table-column>
                 <el-table-column
                 prop="j"
-                label="备注">
+                label="是否过期">
                 </el-table-column>
                 <el-table-column
                 label="操作">
                 <template slot-scope="scope">
-                    <el-button type="text" size="small">充值</el-button>
+                    <el-button type="text" size="small">编辑</el-button>
+                    <el-button type="text" size="small">取消</el-button>
                 </template>
                 </el-table-column>
             </el-table>
         </template>
         <pagination></pagination>
         <template>
-          <member-register v-if="currentLayerType === layerType.register"></member-register>
-          <member-recharge v-if="currentLayerType === layerType.recharge"></member-recharge>
-          <member-recharge-count v-if="currentLayerType === layerType.rechargeCount"></member-recharge-count>
-          <member-pay-way v-if="currentLayerType === layerType.payWay"></member-pay-way>
-          <member-pay-code v-if="currentLayerType === layerType.payCode"></member-pay-code>
-          <member-pay-result v-if="currentLayerType === layerType.payResult"></member-pay-result>
-          <member-pay-order v-if="currentLayerType === layerType.payOrder"></member-pay-order>
-          <member-info v-if="currentLayerType === layerType.info"></member-info>
+          <reservation-add v-if="currentLayerType === layerType.add"></reservation-add>
         </template>
     </section>
 </template>
 <script>
 import Pagination from "@/components/common/pagination.vue";
 import {
-  MemberRegister,
-  MemberRecharge,
-  MemberRechargeCount,
-  MemberPayWay,
-  MemberPayCode,
-  MemberPayResult,
-  MemberPayOrder,
-  MemberInfo
-} from "@/components/member";
+  ReservationAdd
+} from "@/components/reservation";
 
 export default {
-  name: "member",
+  name: "reservation",
 
   data() {
     return {
@@ -181,14 +180,7 @@ export default {
       multipleSelection: [],
 
       layerType: {
-        register: "REGISTER",
-        recharge: "RECHARGE",
-        rechargeCount: "RECHARGE_COUNT",
-        payWay: "PAY_WAY",
-        payCode: "PAY_CODE",
-        payResult: "PAY_RESULT",
-        payOrder: "PAY_ORDER",
-        info: "INFO",
+        add: "ADD"
       },
 
       currentLayerType: ""
@@ -197,14 +189,7 @@ export default {
 
   components: {
     Pagination,
-    MemberRegister,
-    MemberRecharge,
-    MemberRechargeCount,
-    MemberPayWay,
-    MemberPayCode,
-    MemberPayResult,
-    MemberPayOrder,
-    MemberInfo
+    ReservationAdd
   },
 
   methods: {
@@ -232,27 +217,27 @@ export default {
 <style lang="less" scoped>
 @import "../../plugins/assets/css/flex.less";
 
-.member-container {
+.reservation-container {
   width: 0;
   flex: 1;
   position: relative;
   height: 100%;
-  .member-header {
+  .reservation-header {
     padding: 30px;
     padding-bottom: 0;
     box-sizing: border-box;
     .flex-left;
     align-items: flex-end;
-    .member-operation {
+    .reservation-operation {
       margin-right: 5vw;
       button {
         font-size: 2vw;
       }
     }
-    .member-classify {
+    .reservation-classify {
       margin-right: 5vw;
     }
-    .member-statistics {
+    .reservation-statistics {
       font-size: 1.5vw;
       span {
         color: @blue;
@@ -260,7 +245,7 @@ export default {
     }
   }
   .search-options {
-    padding: 30px 0;
+    padding-top: 30px;
     box-sizing: border-box;
     .level-control {
       margin-left: 20px;

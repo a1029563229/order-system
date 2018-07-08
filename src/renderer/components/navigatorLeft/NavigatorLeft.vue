@@ -18,7 +18,7 @@ export default {
 
   data() {
     return {
-      menuType: "mainMenu"
+      menuType: "orderMenu"
     };
   },
 

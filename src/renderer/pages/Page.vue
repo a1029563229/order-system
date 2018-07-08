@@ -15,7 +15,7 @@ export default {
     },
 
     mounted() {
-        this.$router.push("/member");
+        this.$router.push("/form");
         console.log(this.$route);
     },
 }

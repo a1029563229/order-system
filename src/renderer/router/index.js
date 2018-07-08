@@ -29,6 +29,11 @@ export default new Router({
           path: "member",
           name: "member-page",
           component: require("@/pages/children/Member").default
+        },
+        {
+          path: "reservation",
+          name: "reservation-page",
+          component: require("@/pages/children/Reservation").default
         }
       ]
     },

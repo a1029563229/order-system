@@ -1,15 +1,7 @@
 <template>
-    <layer title="确认充值账户和充值金额" confirm="去充值">
+    <layer title="请确认支付条码" confirm="去充值">
         <div class="member-recharge">
-            <div class="recharge-item">
-                <span>会员号码</span>
-                <span>18244913996</span>
-            </div> 
-            <div class="recharge-item">
-                <span>账户余额</span>
-                <span>￥800.00</span>
-            </div> 
-            <el-input placeholder="请输入充值金额" v-model="ruleForm.name" type="number"></el-input>
+            <el-input placeholder="扫码识别支付条码或者手动输入" v-model="ruleForm.name" type="number"></el-input>
             <calculator class="calculator"></calculator>
         </div>
     </layer>
@@ -19,7 +11,7 @@ import Layer from "@/components/common/Layer.vue";
 import Calculator from "@/components/common/Calculator.vue";
 
 export default {
-  name: "memberRechargeCount",
+  name: "memberRecharge",
 
   data() {
     return {

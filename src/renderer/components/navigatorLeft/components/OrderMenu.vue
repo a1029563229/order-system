@@ -49,6 +49,10 @@
             <goods-remark v-if="currentOperation === 'REMARK'"></goods-remark>
             <goods-seat v-if="currentOperation === 'SEAT'"></goods-seat>
             <member-validate v-if="currentOperation === 'MEMBER'"></member-validate>
+            <ensure-identity v-if="currentOperation === ensureType.identity"></ensure-identity>
+            <ensure-order v-if="currentOperation === ensureType.order"></ensure-order>
+            <ensure-member v-if="currentOperation === ensureType.member"></ensure-member>
+            <ensure-seat v-if="currentOperation === ensureType.seat"></ensure-seat>
             <div class="floating-close" @click="clearOperation">X</div>
             <el-button class="ensure-btn" type="primary">确认</el-button>
         </section>
@@ -61,7 +65,11 @@ import {
   GoodsSku,
   GoodsSeat,
   GoodsRemark,
-  MemberValidate
+  MemberValidate,
+  EnsureIdentity,
+  EnsureOrder,
+  EnsureMember,
+  EnsureSeat
 } from "./components";
 import { setTimeout, setInterval } from "timers";
 
@@ -94,7 +102,13 @@ export default {
           identifier: "DELETE"
         }
       ],
-      currentOperation: "MEMBER"
+      ensureType: {
+        identity: "IDENTITY",
+        order: "ORDER",
+        member: "MEMBER",
+        seat: "ENSURE_SEAT",
+      },
+      currentOperation: "ENSURE_SEAT",
     };
   },
 
@@ -103,7 +117,11 @@ export default {
     GoodsSku,
     GoodsSeat,
     GoodsRemark,
-    MemberValidate
+    MemberValidate,
+    EnsureIdentity,
+    EnsureOrder,
+    EnsureMember,
+    EnsureSeat
   },
 
   methods: {
