@@ -13,7 +13,9 @@ export const mixin = {
         addReservation: "ADD_RESERVATION"
       },
 
-      currentLayerType: ""
+      currentLayerType: "",
+
+      absImgUrl: "http://weiyuntest-1253191691.picgz.myqcloud.com"
     }
   },
 
@@ -55,6 +57,12 @@ export const mixin = {
   watch: {
     "$store.state.common.layerCount"(val) {
       this.clearLayer();
+    }
+  },
+
+  computed: {
+    userInfo() {
+      return this.$store.state.user.info;
     }
   }
 }

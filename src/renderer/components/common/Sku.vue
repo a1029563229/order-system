@@ -1,8 +1,8 @@
 <template>
-    <section class="flex-between sku-container">
+    <section class="flex-left sku-container">
           <el-button plain v-for="(sku, index) in skus" :key="index" 
           :class="{'active': index === activeIndex}" 
-          @click="activeIndex = index">{{sku}}</el-button>
+          @click="activeIndex = index">{{sku[keyName] | lenLimit(5)}}</el-button>
     </section>
 </template>
 <script>
@@ -11,9 +11,29 @@ export default {
 
   data() {
     return {
-      skus: ["正常糖", "少糖", "少冰", "多冰", "五分糖", "七分糖"],
       activeIndex: 0
     };
+  },
+
+  props: {
+    skus: {
+      type: Array,
+      default: []
+    },
+
+    keyName: {
+      type: String,
+      default: ''
+    },
+
+    valueName: {
+      type: String,
+      default: ''
+    }
+  },
+
+  mounted() {
+
   }
 };
 </script>
@@ -31,6 +51,7 @@ export default {
     padding-right: 0;
     margin: 0;
     margin-bottom: 10px;
+    margin-right: 10px;
   }
   .active {
     border: 1px solid @blue;

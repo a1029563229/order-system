@@ -15,7 +15,6 @@ export default {
     },
 
     mounted() {
-        this.$router.push("/form");
     },
 }
 </script>

@@ -3,13 +3,7 @@
         <h1 class="goods-title">桌号</h1>
         <p class="prompt">请选择您的座位</p>
         <div class="sku-container">
-            <sku></sku>
-        </div>
-        <div class="goods-practice">
-            座位号
-        </div>
-        <div class="sku-container">
-            <sku></sku>
+            <sku :sku="seatList"></sku>
         </div>
     </section>
 </template>
@@ -19,8 +13,30 @@ import Sku from "@/components/common/Sku.vue";
 export default {
   name: "goodsSeat",
 
+  data() {
+      return {
+          seatList: []
+      }
+  },
+
   components: {
     Sku
+  },
+
+  methods: {
+    getSeatList() {
+      this.$axios
+        .post("shop/table/list", {
+          shopId: this.userInfo.shopId
+        })
+        .then(seatList => {
+          this.seatList = seatList;
+        });
+    }
+  },
+
+  mounted() {
+      this.getSeatList();
   }
 };
 </script>
@@ -35,7 +51,7 @@ export default {
 }
 
 .goods-practice {
-    margin: 30px 0;
+  margin: 30px 0;
 }
 </style>
 

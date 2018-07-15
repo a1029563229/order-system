@@ -22,15 +22,15 @@
           <div class="order-container">
               <div class="order-list-container">
                   <ol class="order-list">
-                      <li v-for="(goods, index) in goodsList" :key="index" :class="{'active': activeGoodsIndex === index}" @click="activeGoodsIndex = index">
-                          <span class="goods-name">这里是商品名称</span>
-                          <span>350ml</span>
-                          <span class="goods-price">￥20.80</span>
-                          <span class="goods-num">x1</span>
+                      <li v-for="(goods, index) in goodsList" :key="index" :class="{'active': activeGoodsIndex === index}" @click="setCurrent(index)">
+                          <span class="goods-name">{{goods.productName | lenLimit(10)}}</span>
+                          <span>{{goods.size || ''}}</span>
+                          <span class="goods-price">￥{{goods.salePrice | toPrice}}</span>
+                          <span class="goods-num">x{{goods.count}}</span>
                       </li>
                   </ol>
                   <div class="price-total">
-                      共 {{goodsList.length}} 项   ￥20.80
+                      共 {{goodsList.length}} 项   ￥{{totalPrice | toPrice}}
                   </div>
               </div>
               <div class="order-operations">
@@ -40,20 +40,22 @@
                   :class="{'active': currentOperation === operation.identifier}">{{operation.name}}</el-button>
               </div>
           </div>
-          <el-button class="payment" type="primary" @click="switchOperation(operationType.ensureIdentity)">收银￥12.00</el-button>
+          <el-button class="payment" type="primary" @click="switchOperation(operationType.ensureIdentity)">收银￥{{totalPrice | toPrice}}</el-button>
           <transition name="order-operation-transition"
               enter-active-class="animated fadeIn"
               leave-active-class="animated fadeOut">
             <section class="floating-box" v-if="currentOperation !== '' && currentOperation !== operationType.remove">
-              <goods-count v-if="currentOperation === operationType.count"></goods-count>
-              <goods-sku v-if="currentOperation === operationType.sku"></goods-sku>
-              <goods-remark v-if="currentOperation === operationType.remark"></goods-remark>
-              <goods-seat v-if="currentOperation === operationType.seat"></goods-seat>
-              <member-validate v-if="currentOperation === operationType.validate"></member-validate>
-              <ensure-identity v-if="currentOperation === operationType.ensureIdentity" @orderOperation="switchOperation"></ensure-identity>
-              <ensure-order v-if="currentOperation === operationType.ensureOrder"></ensure-order>
-              <ensure-member v-if="currentOperation === operationType.ensureMember"></ensure-member>
-              <ensure-seat v-if="currentOperation === operationType.ensureSeat"></ensure-seat>
+              <div class="inside-box">
+                <goods-count ref="goodsCount" v-if="currentOperation === operationType.count"></goods-count>
+                <goods-sku v-if="currentOperation === operationType.sku"></goods-sku>
+                <goods-remark ref="goodsRemark" v-if="currentOperation === operationType.remark"></goods-remark>
+                <goods-seat v-if="currentOperation === operationType.seat"></goods-seat>
+                <member-validate v-if="currentOperation === operationType.validate"></member-validate>
+                <ensure-identity v-if="currentOperation === operationType.ensureIdentity" @orderOperation="switchOperation"></ensure-identity>
+                <ensure-order v-if="currentOperation === operationType.ensureOrder"></ensure-order>
+                <ensure-member v-if="currentOperation === operationType.ensureMember"></ensure-member>
+                <ensure-seat v-if="currentOperation === operationType.ensureSeat"></ensure-seat>
+              </div>
               <div class="floating-close" @click="clearOperation">X</div>
               <el-button class="ensure-btn" type="primary" @click="operationHandler">确认</el-button>
           </section>
@@ -74,6 +76,8 @@
     </section>
 </template>
 <script>
+import { mapActions } from "vuex";
+
 import {
   GoodsCount,
   GoodsSku,
@@ -97,8 +101,6 @@ export default {
 
   data() {
     return {
-      goodsList: [1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7],
-      activeGoodsIndex: 0,
       operations: [
         {
           name: "数量",
@@ -133,7 +135,7 @@ export default {
         ensureMember: "ENSURE_MEMBER",
         ensureSeat: "ENSURE_SEAT"
       },
-      currentOperation: "COUNT",
+      currentOperation: "SKU",
       previousOperation: ""
     };
   },
@@ -156,8 +158,23 @@ export default {
   },
 
   methods: {
+    ...mapActions([
+      "setCurrent",
+      "modifyCount",
+      "removeProduct",
+      "setProperty"
+    ]),
+
     chooseOperationByIndex(index) {
+      if (!this.goodsList.length) {
+        return;
+      }
+
       this.currentOperation = this.operations[index].identifier;
+
+      if (this.currentOperation === this.operationType.remove) {
+        this.removeProduct();
+      }
     },
 
     switchOperation(operation) {
@@ -187,6 +204,14 @@ export default {
         default:
           this.clearOperation();
           break;
+        case this.operationType.count:
+          this.setGoodsCount();
+          this.switchOperation(this.operationType.sku);
+          break;
+        case this.operationType.remark:
+          this.setGoodsRemark();
+          this.switchOperation(this.operationType.seat);
+          break;
         case this.operationType.ensureIdentity:
           this.switchOperation(this.operationType.ensureOrder);
           break;
@@ -195,6 +220,38 @@ export default {
           this.evokeLayer(this.layerType.payWay);
           break;
       }
+    },
+
+    setGoodsCount() {
+      let count = this.$refs.goodsCount.count;
+      this.modifyCount(count);
+    },
+
+    setGoodsRemark() {
+      console.log(this.$refs.goodsRemark);
+      let remark = this.$refs.goodsRemark.remark;
+      this.setProperty({
+        key: "remark",
+        value: remark
+      });
+    }
+  },
+
+  computed: {
+    goodsList() {
+      return this.$store.state.product.productList;
+    },
+
+    activeGoodsIndex() {
+      return this.$store.state.product.currentIndex;
+    },
+
+    totalPrice() {
+      let totalPrice = 0;
+      totalPrice = this.goodsList.reduce((totalPrice, goods) => {
+        return (totalPrice += goods.count * goods.salePrice);
+      }, totalPrice);
+      return totalPrice;
     }
   }
 };
@@ -293,6 +350,12 @@ export default {
           cursor: pointer;
           border-bottom: 1px solid rgba(218, 219, 220, 1);
           .flex-between;
+          > span {
+            flex-grow: 1;
+          }
+          > :nth-child(1) {
+            width: 40%;
+          }
         }
         .active {
           background: rgba(224, 235, 237, 1);
@@ -347,6 +410,10 @@ export default {
     box-sizing: border-box;
     padding: 1.5vw;
     border-left: 1px solid @gray;
+    .inside-box {
+      height: 90%;
+      overflow-y: auto;
+    }
     .floating-close {
       position: absolute;
       right: 1.5vw;

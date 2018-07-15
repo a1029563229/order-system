@@ -2,6 +2,7 @@
     <section class="goods-remark">
         <h1 class="goods-title">备注</h1>
         <el-input
+            v-model="remark"
             class="remark-input"
             type="textarea"
             :rows="10"
@@ -11,7 +12,13 @@
 </template>
 <script>
 export default {
-  name: "goodsRemark"
+  name: "goodsRemark",
+
+  data() {
+    return {
+      remark: ""
+    };
+  }
 };
 </script>
 <style lang="less" scoped>
@@ -20,7 +27,7 @@ export default {
   font-size: 1.2vw;
 }
 .remark-input {
-    margin-top: 40px;
+  margin-top: 40px;
 }
 </style>
 

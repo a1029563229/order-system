@@ -22,7 +22,7 @@
             <el-form-item label="证件号码" prop="name">
                 <el-input v-model="ruleForm.name" type="number"></el-input>
             </el-form-item>
-            </el-form>
+          </el-form>
     </layer>
 </template>
 <script>

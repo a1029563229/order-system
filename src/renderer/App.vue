@@ -6,7 +6,15 @@
 
 <script>
   export default {
-    name: 'order-system'
+    name: 'order-system',
+
+    mounted() {
+        if (!this.userInfo) {
+          this.$router.push("/login");
+        } else {
+          this.$router.push("/form");
+        }
+    }
   }
 </script>
 

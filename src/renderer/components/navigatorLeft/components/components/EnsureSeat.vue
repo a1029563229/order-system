@@ -3,7 +3,7 @@
         <h1 class="ensure-title">桌号选择</h1>
         <p class="prompt">请确认下单桌号</p>
         <div class="sku-container">
-            <sku></sku>
+            <sku :skus="seatList"></sku>
         </div>
     </section>
 </template>
@@ -13,8 +13,24 @@ import Sku from "@/components/common/Sku.vue";
 export default {
   name: "ensureSeat",
 
+  data() {
+    return {
+      seatList: []
+    }
+  },
+
   components: {
     Sku
+  },
+
+  methods: {
+    getSeatList() {
+      this.$axios.post("shop/table/list", {
+        shopId: this.userInfo.shopId
+      }).then(seatList => {
+        this.seatList = seatList;
+      })
+    }
   }
 };
 </script>

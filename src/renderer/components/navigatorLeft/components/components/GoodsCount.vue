@@ -3,9 +3,9 @@
         <h1 class="goods-title">数量 - 这里是商品名称</h1>
         <p class="prompt">请选择商品数量</p>
         <div class="count-container">
-            <div class="add">+</div>
-            <div class="count">{{count}}</div>
-            <div class="desc">-</div>
+            <div class="add" @click="count++">+</div>
+            <div class="count">{{count | lenLimit(6)}}</div>
+            <div class="desc" @click="count = --count < 0 ? 0 : count">-</div>
         </div>
         <div class="calculator-container">
           <calculator></calculator>
@@ -13,6 +13,8 @@
     </section>
 </template>
 <script>
+import { mapActions } from "vuex";
+
 import Calculator from "@/components/common/Calculator.vue";
 
 export default {
@@ -22,10 +24,31 @@ export default {
     Calculator
   },
 
-  computed: {
-    count() {
-      return this.$store.state.common.calculatorVal;
+  data() {
+    return {
+      count: 0
+    };
+  },
+
+  methods: {
+    ...mapActions(["modifyCount"]),
+
+    setOriginalCount() {
+      let productList = this.$store.state.product.productList;
+      let currentIndex = this.$store.state.product.currentIndex;
+      this.count = productList[currentIndex].count;
     }
+  },
+
+  watch: {
+    "$store.state.common.calculatorVal"(val) {
+      console.log({ val });
+      this.count = val;
+    }
+  },
+
+  mounted() {
+    this.setOriginalCount();
   }
 };
 </script>

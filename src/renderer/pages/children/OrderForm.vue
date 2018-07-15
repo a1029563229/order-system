@@ -2,65 +2,68 @@
     <section class="order-form flex-between">
         <div class="goods-list">
           <ol>
-              <li v-for="(goods, index) in goodsList" :key="index">
+              <li v-for="(goods, index) in goodsList" :key="index" @click="addProduct(goods)">
                   <div class="img-control">
-                    <img src="https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1069659981,3245211992&fm=27&gp=0.jpg" alt="">
-                    <el-button type="primary">￥60.00</el-button>
+                    <img :src="absImgUrl + goods.originalImg" alt="">
+                    <el-button type="primary">￥{{goods.salePrice | toPrice}}</el-button>
                   </div>
-                  <p>金枪鱼鸡蛋薯片挞</p>
+                  <p>{{goods.productName}}</p>
               </li>
           </ol>
         </div>
         <ul class="classification">
-            <li v-for="(classify, index) in classificationList" :key="index" :class="{'active': index === activeClassify}" @click="activeClassify = index">
-                全部商品
+            <li v-for="(category, index) in categoryList" :key="index" :class="{'active': index === activeCategory}" @click="activeCategory = index;getGoodsList(category.cateId)">
+                {{category.cateName}}
             </li>
         </ul>
     </section>
 </template>
 <script>
+import $ from "jquery";
+import { mapActions } from "vuex";
+
 export default {
   name: "orderForm",
 
   data() {
     return {
-      goodsList: [
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        1,
-        2,
-        3,
-        3,
-        1,
-        2,
-        3,
-        5
-      ],
+      goodsList: [],
 
-      classificationList: [1, 2, 3, 4, 5],
-      activeClassify: 0
+      categoryList: [],
+      activeCategory: 0
     };
+  },
+
+  methods: {
+    ...mapActions(["addProduct"]),
+
+    getCategoryList() {
+      this.$axios
+        .post("shop/product/cateList", {
+          shopId: this.userInfo.shopId
+        })
+        .then(categoryList => {
+          this.categoryList = categoryList;
+          this.getGoodsList(categoryList[0].cateId);
+        });
+    },
+
+    getGoodsList(cateId) {
+      this.$axios
+        .post("shop/product/list", {
+          shopId: this.userInfo.shopId,
+          cateId
+        })
+        .then(goodsList => {
+          this.goodsList = goodsList;
+        });
+    }
+  },
+
+  mounted() {
+    if (!this.userInfo) return;
+
+    this.getCategoryList();
   }
 };
 </script>
