@@ -10,12 +10,13 @@ import App from './App'
 import router from './router'
 import store from './store'
 import { mixin } from './mixins/mixin';
-import { lenLimit, toJson, toPrice } from './filters/custom.filter';
+import { lenLimit, toJson, toPrice, dateTime } from './filters/custom.filter';
 
 Vue.mixin(mixin);
 Vue.filter("lenLimit", lenLimit);
 Vue.filter("toJson", toJson);
 Vue.filter("toPrice", toPrice);
+Vue.filter("dateTime", dateTime);
 Vue.use(ElementUI);
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))

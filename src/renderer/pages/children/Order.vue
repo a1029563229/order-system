@@ -1,11 +1,12 @@
 <template>
     <section>
-        <el-form :inline="true" :model="searchForm" :rules="rules" ref="searchForm" label-width="100px" class="search-options">
-            <el-form-item label="搜索" prop="name">
-                <el-input placeholder="订单号/会员号/手机号" v-model="searchForm.name"></el-input>
+        <el-form :inline="true" :model="searchForm" ref="searchForm" label-width="100px" class="search-options">
+            <el-form-item label="搜索" prop="orderNum">
+                <el-input placeholder="订单号/会员号/手机号" v-model="searchForm.orderNum"></el-input>
             </el-form-item>
-            <el-form-item label="下单时间" prop="name">
+            <el-form-item label="下单时间" prop="createdTime">
                 <el-date-picker
+                v-model="searchForm.createdTime"
                 type="datetimerange"
                 range-separator="至"
                 start-placeholder="开始日期"
@@ -19,38 +20,38 @@
                     <span>七天</span>
                 </div>
             </el-form-item>
-            <el-form-item label="桌号" prop="name">
-                <el-select v-model="value" placeholder="请选择">
+            <el-form-item label="桌号" prop="tableNum">
+                <el-select v-model="searchForm.tableNum" placeholder="请选择">
                     <el-option
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value">
+                    v-for="item in tableList"
+                    :key="item.tableId"
+                    :label="item.tableName"
+                    :value="item.tableId">
                     </el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="座位" prop="name">
-                <el-select v-model="value" placeholder="请选择">
+            <el-form-item label="座位" prop="seatNo">
+                <el-select v-model="searchForm.seatNo" placeholder="请选择">
                     <el-option
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value">
+                    v-for="item in seatList"
+                    :key="item"
+                    :label="item"
+                    :value="item">
                     </el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="状态" prop="name">
-                <el-select v-model="value" placeholder="请选择">
+            <el-form-item label="状态" prop="orderState">
+                <el-select v-model="searchForm.orderState" placeholder="请选择">
                     <el-option
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
+                    v-for="item in orderStates"
+                    :key="item.key"
+                    :label="item.key"
                     :value="item.value">
                     </el-option>
                 </el-select>
             </el-form-item>
             <el-form-item>
-                <el-button class="submit-btn" type="primary">搜索</el-button>
+                <el-button class="submit-btn" type="primary" @click="onSubmit">搜索</el-button>
                 <el-button @click="resetForm('searchForm')">重置</el-button>
             </el-form-item>
         </el-form>
@@ -58,7 +59,7 @@
             <el-table
                 class="table-list"
                 ref="multipleTable"
-                :data="tableData3"
+                :data="orderList"
                 tooltip-effect="dark"
                 style="width: 100%"
                 @selection-change="handleSelectionChange">
@@ -66,44 +67,46 @@
                 type="selection">
                 </el-table-column>
                 <el-table-column
-                prop="a"
+                prop="orderNum"
                 label="订单编号">
                 </el-table-column>
                 <el-table-column
-                prop="b"
+                prop="userId"
                 label="会员号">
                 </el-table-column>
                 <el-table-column
-                prop="c"
+                prop="tableNum"
                 label="桌号">
                 </el-table-column>
                 <el-table-column
-                prop="d"
+                prop="seatNo"
                 label="座位号">
                 </el-table-column>
                 <el-table-column
-                prop="e"
                 label="下单时间">
+                  <template slot-scope="scope">
+                    <span>{{scope.row.createdTime | dateTime}}</span>
+                  </template>
                 </el-table-column>
                 <el-table-column
-                prop="f"
+                prop="totalPrice"
                 label="订单金额">
                 </el-table-column>
                 <el-table-column
-                prop="g"
                 label="订单状态">
+                  <template slot-scope="scope">
+                    <span>{{scope.row.orderState | orderState(orderStates)}}</span>
+                  </template>
                 </el-table-column>
                 <el-table-column
-                prop="h"
-                label="名称">
-                </el-table-column>
-                <el-table-column
-                prop="i"
-                label="数量">
-                </el-table-column>
-                <el-table-column
-                prop="j"
-                label="确认出单">
+                label="商品列表">
+                  <template slot-scope="scope">
+                    <el-checkbox-group>
+                      <div v-for="(product, index) in scope.row.productList" :key="index">
+                          <el-checkbox :label="product.productName"></el-checkbox>
+                      </div>
+                    </el-checkbox-group>
+                  </template>
                 </el-table-column>
                 <el-table-column
                 label="操作">
@@ -116,10 +119,10 @@
         <pagination>
           <section class="pagination-slot">
              <div>
-                合计单数<span>（单）</span>：2
+                合计单数<span>（单）</span>：{{orderList.length}}
             </div>
             <div>
-                合计金额<span>（元）</span>：1520.00
+                合计金额<span>（元）</span>：{{allMoney}}
             </div>
             <div>
                 <el-button type="primary">支付</el-button>
@@ -139,55 +142,31 @@ export default {
   data() {
     return {
       searchForm: {
-        name: "",
-        region: "",
-        date1: "",
-        date2: "",
-        delivery: false,
-        type: [],
-        resource: "",
-        desc: ""
+        orderNum: "",
+        createdTime: [],
+        tableNum: "",
+        seatNo: "",
+        orderState: ""
       },
-      options: [
-        {
-          value: "选项1",
-          label: "黄金糕"
-        },
-        {
-          value: "选项2",
-          label: "双皮奶"
-        },
-        {
-          value: "选项3",
-          label: "蚵仔煎"
-        },
-        {
-          value: "选项4",
-          label: "龙须面"
-        },
-        {
-          value: "选项5",
-          label: "北京烤鸭"
-        }
-      ],
-      value: "",
-      rules: {},
 
-      tableData3: [
+      tableList: [],
+      seatList: [],
+      orderStates: [
         {
-          a: 1,
-          b: 2,
-          c: 3,
-          d: 4,
-          e: 5,
-          f: 6,
-          g: 7,
-          h: 8,
-          i: 9,
-          j: 10,
-          k: 11
+          key: "待支付",
+          value: 1
+        },
+        {
+          key: "已支付",
+          value: 2
+        },
+        {
+          key: "已取消",
+          value: -1
         }
       ],
+
+      orderList: [],
 
       multipleSelection: []
     };
@@ -198,20 +177,86 @@ export default {
   },
 
   methods: {
+    onSubmit() {
+      let params = {};
+      for (let key in this.searchForm) {
+        if (key === "createdTime") {
+          if (this.searchForm[key].length > 1) {
+            params["startCreatedTime"] = this.searchForm[key][0];
+            params["endCreatedTime"] = this.searchForm[key][1];
+          }
+          continue;
+        }
+
+        if (this.searchForm[key] !== "") {
+          params[key] = this.searchForm[key];
+          continue;
+        }
+      }
+
+      this.getOrderList(params);
+    },
+
     resetForm(formName) {
       this.$refs[formName].resetFields();
     },
 
     handleSelectionChange(val) {
       this.multipleSelection = val;
+    },
+
+    getOrderList(params = {}) {
+      this.$axios.post("order/list", params).then(orderList => {
+        this.orderList = orderList;
+      });
+    },
+
+    getTableList() {
+      this.$axios.post("shop/table/list").then(tableList => {
+        this.tableList = tableList;
+      });
+    }
+  },
+
+  filters: {
+    orderState(val, orderStates) {
+      if (!+val) return val;
+
+      let orderState = orderStates.filter(state => state.value === +val)[0];
+
+      if (orderState) {
+        return orderState.key;
+      } else {
+        return val;
+      }
+    }
+  },
+
+  computed: {
+    allMoney() {
+      return this.orderList.reduce(
+        (money, order) => money + order.totalPrice,
+        0
+      );
+    }
+  },
+
+  watch: {
+    "searchForm.tableNum"(tableId) {
+      let seatCount = this.tableList.filter(
+        table => table.tableId === tableId
+      )[0].homePlayers;
+      this.searchForm.seatNo = "";
+      this.seatList = [];
+      for (let i = 0; i < seatCount; i++) {
+        this.seatList[i] = i + 1;
+      }
     }
   },
 
   mounted() {
-    var i = 4;
-    while (i--) {
-      this.tableData3 = [...this.tableData3, ...this.tableData3];
-    }
+    this.getOrderList();
+    this.getTableList();
   }
 };
 </script>

@@ -14,7 +14,7 @@
             共 <span>1999</span> 个会员，今日新增 <span>0</span> 个
           </div>
         </section>
-        <el-form :inline="true" :model="searchForm" :rules="rules" ref="searchForm" label-width="100px" class="search-options">
+        <el-form :inline="true" :model="searchForm" ref="searchForm" label-width="100px" class="search-options">
             <el-form-item label="搜索" prop="name">
                 <el-input placeholder="会员号/手机号" v-model="searchForm.name"></el-input>
             </el-form-item>
@@ -26,7 +26,7 @@
                 end-placeholder="结束日期">
                 </el-date-picker>
             </el-form-item>
-            <el-form-item label="支付方式" prop="name">
+            <el-form-item label="会员等级" prop="name">
                 <el-select v-model="value" placeholder="请选择">
                     <el-option
                     v-for="item in options"
@@ -45,7 +45,7 @@
             <el-table
                 class="table-list"
                 ref="multipleTable"
-                :data="tableData3"
+                :data="memberList"
                 tooltip-effect="dark"
                 style="width: 100%"
                 @selection-change="handleSelectionChange">
@@ -53,39 +53,41 @@
                 type="selection">
                 </el-table-column>
                 <el-table-column
-                prop="a"
+                prop="userAccount"
                 label="会员号">
                 </el-table-column>
                 <el-table-column
-                prop="e"
+                prop="userMobile"
                 label="手机号">
                 </el-table-column>
                 <el-table-column
-                prop="f"
+                prop="userState"
                 label="状态">
                 </el-table-column>
                 <el-table-column
-                prop="g"
+                prop="nickName"
                 label="会员昵称">
                 </el-table-column>
                 <el-table-column
-                prop="h"
+                prop="userVIPLevel"
                 label="等级">
                 </el-table-column>
                 <el-table-column
-                prop="i"
+                prop="discountLevel"
                 label="折扣">
                 </el-table-column>
                 <el-table-column
-                prop="j"
+                prop="nowBalance"
                 label="余额">
                 </el-table-column>
                 <el-table-column
-                prop="j"
                 label="开卡时间">
+                  <template slot-scope="scope">
+                    <span>{{ scope.row.createdTime | dateTime }}</span>
+                  </template>
                 </el-table-column>
                 <el-table-column
-                prop="j"
+                prop="note"
                 label="备注">
                 </el-table-column>
                 <el-table-column
@@ -130,55 +132,12 @@ export default {
   data() {
     return {
       searchForm: {
-        name: "",
-        region: "",
-        date1: "",
-        date2: "",
-        delivery: false,
-        type: [],
-        resource: "",
-        desc: ""
-      },
-      options: [
-        {
-          value: "选项1",
-          label: "黄金糕"
-        },
-        {
-          value: "选项2",
-          label: "双皮奶"
-        },
-        {
-          value: "选项3",
-          label: "蚵仔煎"
-        },
-        {
-          value: "选项4",
-          label: "龙须面"
-        },
-        {
-          value: "选项5",
-          label: "北京烤鸭"
-        }
-      ],
-      value: "",
-      rules: {},
+        userMobile: "",
+        createdTime: [],
 
-      tableData3: [
-        {
-          a: 1,
-          b: 2,
-          c: 3,
-          d: 4,
-          e: 5,
-          f: 6,
-          g: 7,
-          h: 8,
-          i: 9,
-          j: 10,
-          k: 11
-        }
-      ],
+      },
+
+      memberList: [],
 
       multipleSelection: []
     };
@@ -203,14 +162,19 @@ export default {
 
     handleSelectionChange(val) {
       this.multipleSelection = val;
+    },
+
+    getMemberList() {
+      this.$axios
+        .post("user/vip/list")
+        .then(memberList => {
+          this.memberList = memberList;
+        });
     }
   },
 
   mounted() {
-    var i = 4;
-    while (i--) {
-      this.tableData3 = [...this.tableData3, ...this.tableData3];
-    }
+    this.getMemberList();
   }
 };
 </script>

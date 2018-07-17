@@ -1,11 +1,12 @@
 <template>
     <section>
-        <el-form :inline="true" :model="searchForm" :rules="rules" ref="searchForm" label-width="100px" class="search-options">
-            <el-form-item label="搜索" prop="name">
-                <el-input placeholder="订单号/会员号/手机号" v-model="searchForm.name"></el-input>
+        <el-form :inline="true" :model="searchForm" ref="searchForm" label-width="100px" class="search-options">
+            <el-form-item label="搜索" prop="orderNum">
+                <el-input placeholder="订单号/会员号/手机号" v-model="searchForm.orderNum"></el-input>
             </el-form-item>
-            <el-form-item label="支付时间" prop="name">
+            <el-form-item label="支付时间" prop="payTime">
                 <el-date-picker
+                v-model="searchForm.payTime"
                 type="datetimerange"
                 range-separator="至"
                 start-placeholder="开始日期"
@@ -19,18 +20,18 @@
                     <span>七天</span>
                 </div>
             </el-form-item>
-            <el-form-item label="支付方式" prop="name">
-                <el-select v-model="value" placeholder="请选择">
+            <el-form-item label="支付方式" prop="payMethod">
+                <el-select v-model="searchForm.payMethod" placeholder="请选择">
                     <el-option
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
+                    v-for="item in payMethods"
+                    :key="item.key"
+                    :label="item.key"
                     :value="item.value">
                     </el-option>
                 </el-select>
             </el-form-item>
             <el-form-item>
-                <el-button class="submit-btn" type="primary">搜索</el-button>
+                <el-button class="submit-btn" type="primary" @click="onSubmit">搜索</el-button>
                 <el-button @click="resetForm('searchForm')">重置</el-button>
             </el-form-item>
         </el-form>
@@ -38,7 +39,7 @@
             <el-table
                 class="table-list"
                 ref="multipleTable"
-                :data="tableData3"
+                :data="receiptList"
                 tooltip-effect="dark"
                 style="width: 100%"
                 @selection-change="handleSelectionChange">
@@ -46,32 +47,36 @@
                 type="selection">
                 </el-table-column>
                 <el-table-column
-                prop="a"
+                prop="orderId"
                 label="订单编号">
                 </el-table-column>
                 <el-table-column
-                prop="e"
+                prop="payPhone"
                 label="会员号">
                 </el-table-column>
                 <el-table-column
-                prop="f"
+                prop="stepNo"
                 label="交易流水号">
                 </el-table-column>
                 <el-table-column
-                prop="g"
                 label="支付时间">
+                <template slot-scope="scope">
+                  <span>{{ scope.row.payTime | dateTime }}</span>
+                </template>
                 </el-table-column>
                 <el-table-column
-                prop="h"
+                prop="orderCost"
                 label="订单金额">
                 </el-table-column>
                 <el-table-column
-                prop="i"
+                prop="sholdReceive"
                 label="应收金额">
                 </el-table-column>
                 <el-table-column
-                prop="j"
                 label="支付方式">
+                  <template slot-scope="scope">
+                    <span>{{ scope.row.payMethod | payMethod(payMethods) }}</span>
+                  </template>
                 </el-table-column>
                 <el-table-column
                 label="操作">
@@ -93,55 +98,31 @@ export default {
   data() {
     return {
       searchForm: {
-        name: "",
-        region: "",
-        date1: "",
-        date2: "",
-        delivery: false,
-        type: [],
-        resource: "",
-        desc: ""
+        orderNum: "",
+        payTime: [],
+        payMethod: ""
       },
-      options: [
-        {
-          value: "选项1",
-          label: "黄金糕"
-        },
-        {
-          value: "选项2",
-          label: "双皮奶"
-        },
-        {
-          value: "选项3",
-          label: "蚵仔煎"
-        },
-        {
-          value: "选项4",
-          label: "龙须面"
-        },
-        {
-          value: "选项5",
-          label: "北京烤鸭"
-        }
-      ],
-      value: "",
-      rules: {},
 
-      tableData3: [
+      payMethods: [
         {
-          a: 1,
-          b: 2,
-          c: 3,
-          d: 4,
-          e: 5,
-          f: 6,
-          g: 7,
-          h: 8,
-          i: 9,
-          j: 10,
-          k: 11
+          key: "微信支付",
+          value: 0
+        },
+        {
+          key: "支付宝",
+          value: 1
+        },
+        {
+          key: "储值卡",
+          value: 2
+        },
+        {
+          key: "现金",
+          value: 3
         }
       ],
+
+      receiptList: [],
 
       multipleSelection: []
     };
@@ -152,20 +133,59 @@ export default {
   },
 
   methods: {
+    onSubmit() {
+      let params = {};
+      for (let key in this.searchForm) {
+        if (key === "payTime") {
+          if (this.searchForm[key].length > 1) {
+            params["startPayTime"] = this.searchForm[key][0];
+            params["endPayTime"] = this.searchForm[key][1];
+          }
+          continue;
+        }
+
+        if (this.searchForm[key] !== "") {
+          params[key] = this.searchForm[key];
+          continue;
+        }
+      }
+
+      this.getReceiptList(params);
+    },
+
     resetForm(formName) {
       this.$refs[formName].resetFields();
     },
 
     handleSelectionChange(val) {
       this.multipleSelection = val;
+    },
+
+    getReceiptList(params) {
+      this.$axios.post("order/receipt/list", params).then(receiptList => {
+        this.receiptList = receiptList;
+      });
+    }
+  },
+
+  filters: {
+    payMethod(val, payMethods) {
+      if (!+val) return val;
+
+      let payMethod = payMethods.filter(
+        state => state.value === +val
+      )[0];
+
+      if (payMethod) {
+        return payMethod.key;
+      } else {
+        return val;
+      }
     }
   },
 
   mounted() {
-    var i = 4;
-    while (i--) {
-      this.tableData3 = [...this.tableData3, ...this.tableData3];
-    }
+    this.getReceiptList();
   }
 };
 </script>

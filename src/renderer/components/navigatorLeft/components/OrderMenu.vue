@@ -14,43 +14,48 @@
                         <el-button type="primary" @click="toggleMenu('mainMenu')">取消</el-button>
                   </div>
               </div>
-              <div class="nickname" @click="switchOperation(operationType.validate)">
-                  <span>微信昵称：</span>    
-                  <p>超长超长超长超长超长超长超长超长超长超长</p>
+              <div class="nickname" @click="switchOperation(operationType.ensureIdentity);modifyEnsureType(1);">
+                  <template v-if="memberInfo">
+                    <span>会员昵称</span>    
+                    <p>{{memberInfo.nickName}}</p>
+                  </template>
+                  <div class="validate-identity" v-else>
+                    身份验证
+                  </div>
               </div>
           </div>
           <div class="order-container">
               <div class="order-list-container">
                   <ol class="order-list">
-                      <li v-for="(goods, index) in goodsList" :key="index" :class="{'active': activeGoodsIndex === index}" @click="setCurrent(index)">
-                          <span class="goods-name">{{goods.productName | lenLimit(10)}}</span>
-                          <span>{{goods.size || ''}}</span>
+                      <li v-for="(goods, index) in goodsList" :key="index" :class="{'active': activeGoodsIndex === index}" @click="setCurrent(index);clearOperation();">
+                          <span class="goods-name">{{goods.productName | lenLimit(5)}}</span>
+                          <span>{{goods.attrName | lenLimit(5)}}</span>
                           <span class="goods-price">￥{{goods.salePrice | toPrice}}</span>
                           <span class="goods-num">x{{goods.count}}</span>
                       </li>
                   </ol>
                   <div class="price-total">
-                      共 {{goodsList.length}} 项   ￥{{totalPrice | toPrice}}
+                      共 {{goodsList.length}} 项   ￥{{orderInfo.totalPrice | toPrice}}
                   </div>
               </div>
               <div class="order-operations">
                   <el-button plain v-for="(operation, index) in operations" 
                   :key="index" 
-                  @click="chooseOperationByIndex(index)" 
+                  @click="chooseOperationByIndex(index);" 
                   :class="{'active': currentOperation === operation.identifier}">{{operation.name}}</el-button>
               </div>
           </div>
-          <el-button class="payment" type="primary" @click="switchOperation(operationType.ensureIdentity)">收银￥{{totalPrice | toPrice}}</el-button>
+          <el-button class="payment" type="primary" @click="switchOperation(operationType.ensureIdentity)">收银￥{{orderInfo.totalPrice | toPrice}}</el-button>
           <transition name="order-operation-transition"
               enter-active-class="animated fadeIn"
               leave-active-class="animated fadeOut">
             <section class="floating-box" v-if="currentOperation !== '' && currentOperation !== operationType.remove">
               <div class="inside-box">
                 <goods-count ref="goodsCount" v-if="currentOperation === operationType.count"></goods-count>
-                <goods-sku v-if="currentOperation === operationType.sku"></goods-sku>
+                <goods-sku ref="goodsSku" v-if="currentOperation === operationType.sku"></goods-sku>
                 <goods-remark ref="goodsRemark" v-if="currentOperation === operationType.remark"></goods-remark>
-                <goods-seat v-if="currentOperation === operationType.seat"></goods-seat>
-                <member-validate v-if="currentOperation === operationType.validate"></member-validate>
+                <goods-seat ref="goodsSeat" v-if="currentOperation === operationType.seat"></goods-seat>
+                <member-validate ref="memberValidate" v-if="currentOperation === operationType.validate"></member-validate>
                 <ensure-identity v-if="currentOperation === operationType.ensureIdentity" @orderOperation="switchOperation"></ensure-identity>
                 <ensure-order v-if="currentOperation === operationType.ensureOrder"></ensure-order>
                 <ensure-member v-if="currentOperation === operationType.ensureMember"></ensure-member>
@@ -135,7 +140,7 @@ export default {
         ensureMember: "ENSURE_MEMBER",
         ensureSeat: "ENSURE_SEAT"
       },
-      currentOperation: "SKU",
+      currentOperation: "",
       previousOperation: ""
     };
   },
@@ -162,7 +167,8 @@ export default {
       "setCurrent",
       "modifyCount",
       "removeProduct",
-      "setProperty"
+      "setProperty",
+      "modifyEnsureType"
     ]),
 
     chooseOperationByIndex(index) {
@@ -208,9 +214,22 @@ export default {
           this.setGoodsCount();
           this.switchOperation(this.operationType.sku);
           break;
+        case this.operationType.sku:
+          this.setGoodsSku();
+          this.switchOperation(this.operationType.remark);
+          break;
         case this.operationType.remark:
-          this.setGoodsRemark();
+          this.setCustomProperty("goodsRemark", "remark");
           this.switchOperation(this.operationType.seat);
+          break;
+        case this.operationType.seat:
+          this.setCustomProperty("goodsSeat", "tableId");
+          this.setCustomProperty("goodsSeat", "seatNo");
+          this.clearOperation();
+          break;
+        case this.operationType.validate:
+          this.validateMember();
+          // this.clearOperation();
           break;
         case this.operationType.ensureIdentity:
           this.switchOperation(this.operationType.ensureOrder);
@@ -225,15 +244,27 @@ export default {
     setGoodsCount() {
       let count = this.$refs.goodsCount.count;
       this.modifyCount(count);
+      this.setProperty({
+        key: "stock",
+        value: count
+      });
     },
 
-    setGoodsRemark() {
-      console.log(this.$refs.goodsRemark);
-      let remark = this.$refs.goodsRemark.remark;
+    setGoodsSku() {
+      this.setCustomProperty("goodsSku", "attList");
+    },
+
+    setCustomProperty(refName, name) {
+      let value = this.$refs[refName][name];
       this.setProperty({
-        key: "remark",
-        value: remark
+        key: name,
+        value
       });
+    },
+
+    validateMember() {
+      let memberValidate = this.$refs.memberValidate;
+      memberValidate.validateMember();
     }
   },
 
@@ -246,12 +277,8 @@ export default {
       return this.$store.state.product.currentIndex;
     },
 
-    totalPrice() {
-      let totalPrice = 0;
-      totalPrice = this.goodsList.reduce((totalPrice, goods) => {
-        return (totalPrice += goods.count * goods.salePrice);
-      }, totalPrice);
-      return totalPrice;
+    memberInfo() {
+      return this.$store.state.product.memberInfo;
     }
   }
 };
@@ -314,6 +341,7 @@ export default {
       width: 20%;
       height: 100%;
       font-size: 12px;
+      text-align: center;
       cursor: pointer;
       .options-box;
       .flex-auto;
@@ -327,6 +355,9 @@ export default {
         display: -webkit-box;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
+      }
+      .validate-identity {
+        font-size: 30px;
       }
     }
   }
@@ -354,7 +385,7 @@ export default {
             flex-grow: 1;
           }
           > :nth-child(1) {
-            width: 40%;
+            width: 30%;
           }
         }
         .active {

@@ -3,7 +3,11 @@
         <h1 class="goods-title">桌号</h1>
         <p class="prompt">请选择您的座位</p>
         <div class="sku-container">
-            <sku :sku="seatList"></sku>
+            <sku @selectSku="selectTable" :skus="seatList" keyName="homePlace"></sku>
+        </div>
+        <p class="prompt">请选择您的座位号</p>
+        <div class="sku-container">
+            <sku @selectSku="selectSeatNo" :skus="seatCounters" keyName="code"></sku>
         </div>
     </section>
 </template>
@@ -15,7 +19,11 @@ export default {
 
   data() {
       return {
-          seatList: []
+          seatList: [],
+          seatCounters: [],
+
+          tableId: "",
+          seatNo: ""
       }
   },
 
@@ -24,6 +32,15 @@ export default {
   },
 
   methods: {
+    selectTable(pos) {
+      this.tableId = this.seatList[pos].tableId;
+      this.generateSeat(pos);
+    },
+
+    selectSeatNo(seatNo) {
+      this.seatNo = seatNo;
+    },
+
     getSeatList() {
       this.$axios
         .post("shop/table/list", {
@@ -31,7 +48,22 @@ export default {
         })
         .then(seatList => {
           this.seatList = seatList;
+          this.selectTable(0);
         });
+    },
+
+    generateSeat(pos = 0) {
+      this.seatCounters = [];
+      let seat = { code: 0 },
+      max = this.seatList[pos].homePlayers,
+        i = 1;
+      while (i !== max + 1) {
+        this.seatCounters.push(Object.assign({}, seat, {
+          code: i
+        }));
+        i++;
+      }
+      this.selectSeatNo(0);
     }
   },
 

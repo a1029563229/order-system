@@ -63,6 +63,20 @@ export const mixin = {
   computed: {
     userInfo() {
       return this.$store.state.user.info;
+    },
+
+    orderInfo() {
+      let goodsList = this.$store.state.product.productList,
+        totalPrice = 0,
+        count = 0;
+      goodsList.forEach(goods => {
+        count += goods.count;
+        totalPrice += goods.count * goods.salePrice
+      })
+      return {
+        totalPrice,
+        count
+      };
     }
   }
 }

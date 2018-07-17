@@ -5,11 +5,11 @@
             <p class="prompt">请确认订单内容</p>
             <div class="recharge-item">
                 <span>商品数</span>
-                <span>2</span>
+                <span>{{orderInfo.count}}</span>
             </div>
             <div class="recharge-item">
                 <span>订单金额</span>
-                <span>￥12.00</span>
+                <span>￥{{orderInfo.totalPrice | toPrice}}</span>
             </div>
         </div>
         <div>
@@ -18,7 +18,7 @@
             <p class="text-danger">*无有效认证默认为游客，不支持挂单和折扣</p>
             <div class="recharge-item">
                 <span>应付金额</span>
-                <span>￥12.00</span>
+                <span>￥{{orderInfo.totalPrice | toPrice}}</span>
             </div>
         </div>
     </section>

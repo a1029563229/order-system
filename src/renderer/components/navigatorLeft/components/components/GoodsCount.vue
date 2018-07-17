@@ -1,6 +1,6 @@
 <template>
     <section class="goods-count">
-        <h1 class="goods-title">数量 - 这里是商品名称</h1>
+        <h1 class="goods-title">数量 - {{currentGoods.productName}}</h1>
         <p class="prompt">请选择商品数量</p>
         <div class="count-container">
             <div class="add" @click="count++">+</div>
@@ -14,6 +14,7 @@
 </template>
 <script>
 import { mapActions } from "vuex";
+import { goodsMixin } from "../goods.mixin";
 
 import Calculator from "@/components/common/Calculator.vue";
 
@@ -23,6 +24,8 @@ export default {
   components: {
     Calculator
   },
+
+  mixins: [goodsMixin],
 
   data() {
     return {
@@ -42,7 +45,6 @@ export default {
 
   watch: {
     "$store.state.common.calculatorVal"(val) {
-      console.log({ val });
       this.count = val;
     }
   },

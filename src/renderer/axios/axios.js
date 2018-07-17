@@ -5,7 +5,11 @@ axios.defaults.baseURL = "http://47.93.43.96:5001/lmuze/api/";
 axios.defaults.headers.post['Content-Type'] = 'application/json;charset=UTF-8';
 axios.defaults.withCredentials = true;
 axios.defaults.transformRequest = function (data) {
+  if (typeof data === 'undefined') {
+    data = {};
+  }
   if (typeof data !== 'undefined') {
+    data.shopId = window.$vue.userInfo.shopId;
     let sign = "LIDEWEN757198810237430" + "&" + JSON.stringify(data);
     data.sign = md5(sign);
   }

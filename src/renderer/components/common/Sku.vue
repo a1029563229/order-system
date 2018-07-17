@@ -2,7 +2,7 @@
     <section class="flex-left sku-container">
           <el-button plain v-for="(sku, index) in skus" :key="index" 
           :class="{'active': index === activeIndex}" 
-          @click="activeIndex = index">{{sku[keyName] | lenLimit(5)}}</el-button>
+          @click="activeIndex = index;selectSku(index)">{{sku[keyName] | lenLimit(5)}}</el-button>
     </section>
 </template>
 <script>
@@ -29,6 +29,12 @@ export default {
     valueName: {
       type: String,
       default: ''
+    }
+  },
+
+  methods: {
+    selectSku(index) {
+      this.$emit("selectSku", index);
     }
   },
 
