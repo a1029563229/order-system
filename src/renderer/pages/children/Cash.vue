@@ -162,9 +162,16 @@ export default {
     },
 
     getReceiptList(params) {
-      this.$axios.post("order/receipt/list", params).then(receiptList => {
-        this.receiptList = receiptList;
-      });
+      this.$axios
+        .post(
+          "order/receipt/list",
+          Object.assign({}, params, {
+            currentPage: 1
+          })
+        )
+        .then(receiptList => {
+          this.receiptList = receiptList;
+        });
     }
   },
 
@@ -172,9 +179,7 @@ export default {
     payMethod(val, payMethods) {
       if (!+val) return val;
 
-      let payMethod = payMethods.filter(
-        state => state.value === +val
-      )[0];
+      let payMethod = payMethods.filter(state => state.value === +val)[0];
 
       if (payMethod) {
         return payMethod.key;

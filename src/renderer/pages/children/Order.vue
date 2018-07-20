@@ -206,9 +206,16 @@ export default {
     },
 
     getOrderList(params = {}) {
-      this.$axios.post("order/list", params).then(orderList => {
-        this.orderList = orderList;
-      });
+      this.$axios
+        .post(
+          "order/list",
+          Object.assign({}, params, {
+            currentPage: 1
+          })
+        )
+        .then(orderList => {
+          this.orderList = orderList;
+        });
     },
 
     getTableList() {

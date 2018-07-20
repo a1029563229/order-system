@@ -1,4 +1,5 @@
 import { app, BrowserWindow } from 'electron'
+import pkg from "../../package.json";
 
 /**
  * Set `__static` path to static files in production
@@ -13,7 +14,7 @@ const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
-function createWindow () {
+function createWindow() {
   /**
    * Initial window options
    */
@@ -28,6 +29,10 @@ function createWindow () {
   mainWindow.on('closed', () => {
     mainWindow = null
   })
+}
+
+if (process.platform === 'win32') {
+  app.setAppUserModelId(pkg.build.appId)
 }
 
 app.on('ready', createWindow)

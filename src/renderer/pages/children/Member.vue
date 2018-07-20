@@ -15,8 +15,8 @@
           </div>
         </section>
         <el-form :inline="true" :model="searchForm" ref="searchForm" label-width="100px" class="search-options">
-            <el-form-item label="搜索" prop="name">
-                <el-input placeholder="会员号/手机号" v-model="searchForm.name"></el-input>
+            <el-form-item label="搜索" prop="userMobile">
+                <el-input placeholder="会员号/手机号" v-model="searchForm.userMobile"></el-input>
             </el-form-item>
             <el-form-item label="开卡时间" prop="name">
                 <el-date-picker
@@ -27,9 +27,9 @@
                 </el-date-picker>
             </el-form-item>
             <el-form-item label="会员等级" prop="name">
-                <el-select v-model="value" placeholder="请选择">
+                <el-select v-model="searchForm.level" placeholder="请选择">
                     <el-option
-                    v-for="item in options"
+                    v-for="item in levelList"
                     :key="item.value"
                     :label="item.label"
                     :value="item.value">
@@ -134,8 +134,23 @@ export default {
       searchForm: {
         userMobile: "",
         createdTime: [],
-
+        level: ""
       },
+
+      levelList: [
+        {
+          key: 1,
+          value: "avoid the error prompt"
+        }
+      ],
+
+      memberTypes: {
+        memberList: "MEMBER_LIST",
+        storedRecord: "STORED_RECORD",
+        consumeRecord: "CONSUME_RECORD",
+      },
+
+      memberType: "MEMBER_LIST",
 
       memberList: [],
 
@@ -164,9 +179,20 @@ export default {
       this.multipleSelection = val;
     },
 
-    getMemberList() {
+    getLevelList() {
+      this.$axios.post("user/vip/levelList").then(levelList => {
+        this.levelList = levelList;
+      })
+    },
+
+    getMemberList(params = {}) {
       this.$axios
-        .post("user/vip/list")
+        .post(
+          "user/vip/list",
+          Object.assign({}, params, {
+            currentPage: 1
+          })
+        )
         .then(memberList => {
           this.memberList = memberList;
         });
@@ -174,6 +200,7 @@ export default {
   },
 
   mounted() {
+    this.getLevelList();
     this.getMemberList();
   }
 };

@@ -38,14 +38,10 @@ export default {
     ...mapActions(["addProduct"]),
 
     getCategoryList() {
-      this.$axios
-        .post("shop/product/cateList", {
-          shopId: this.userInfo.shopId
-        })
-        .then(categoryList => {
-          this.categoryList = categoryList;
-          this.getGoodsList(categoryList[0].cateId);
-        });
+      this.$axios.post("shop/product/cateList").then(categoryList => {
+        this.categoryList = categoryList;
+        this.getGoodsList(categoryList[0].cateId);
+      });
     },
 
     getGoodsList(cateId) {
