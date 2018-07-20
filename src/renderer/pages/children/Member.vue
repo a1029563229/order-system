@@ -134,7 +134,7 @@ export default {
       searchForm: {
         userMobile: "",
         createdTime: [],
-        level: ""
+        level: "",
       },
 
       levelList: [
