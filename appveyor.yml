@@ -1,3 +1,5 @@
+# Commented sections below can be used to run tests on the CI server
+# https://simulatedgreg.gitbooks.io/electron-vue/content/en/testing.html#on-the-subject-of-ci-testing
 version: 0.1.{build}
 
 branches:
@@ -20,10 +22,11 @@ init:
 install:
   - ps: Install-Product node 8 x64
   - git reset --hard HEAD
-  - yarn
+  - npm install
   - node --version
 
 build_script:
-  - yarn build
+  #- yarn test
+  - npm run release
 
 test: off
