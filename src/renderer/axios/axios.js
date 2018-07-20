@@ -8,7 +8,7 @@ axios.defaults.transformRequest = function (data) {
   if (typeof data === 'undefined') {
     data = {};
   }
-  if (typeof data !== 'undefined') {
+  if (typeof data !== 'undefined' && window.$vue.userInfo) {
     data.shopId = window.$vue.userInfo.shopId;
     let sign = "LIDEWEN757198810237430" + "&" + JSON.stringify(data);
     data.sign = md5(sign);
