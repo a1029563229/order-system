@@ -35,15 +35,28 @@ export default {
           return;
         }
 
+        let api_url = "";
         switch (this.payInfo.payWay) {
           case 0:
-            this.payForByWechatOrder(this.payInfo.payType);
+            if (this.payInfo.payType === 1) {
+              api_url = "pay/dianPay/weixin";
+            } else {
+              api_url = "pay/orderPay/weixin";
+            }
+            break;
+          case 1:
+            if (this.payInfo.payType === 1) {
+              api_url = "pay/dianPay/zhifubao";
+            } else {
+              api_url = "pay/orderPay/zhifubao";
+            }
             break;
         }
+        this.payForByOrder(this.payInfo.payType, api_url);
       }
     },
 
-    payForByWechatOrder(payType) {
+    payForByOrder(payType, api_url) {
       let payParams = {
         authCode: this.authCode,
         payType: this.payInfo.payWay,
@@ -51,17 +64,16 @@ export default {
         suTspableId: this.tableInfo ? this.tableInfo.tableId : undefined,
         productList: JSON.stringify(this.$store.state.product.productList)
       };
-      let api_url = "";
 
-      if (payType === 1) { // 点单
-        api_url = "pay/dianPay/weixin";
+      if (payType === 1) {
+        // 点单
         payParams = Object.assign({}, payParams, {
           payModel: this.payInfo.payModel,
           totalPrice: this.orderInfo.totalPrice,
           payPrice: this.orderInfo.payPrice
         });
-      } else if (payType === 2) { // 订单
-        api_url = "pay/orderPay/weixin";
+      } else if (payType === 2) {
+        // 订单
         payParams = Object.assign({}, payParams, {
           orderList: JSON.stringify(this.payInfo.orderList),
           orderTotalAmount: this.orderInfo.payPrice,

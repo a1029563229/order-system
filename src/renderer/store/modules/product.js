@@ -17,7 +17,7 @@ const state = {
 
     tableInfo: null,
     ensureIdeType: 1,
-    menuType: "mainMenu"
+    menuType: "orderMenu"
 }
 
 const mutations = {

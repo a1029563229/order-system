@@ -55,6 +55,9 @@ export default {
           case 0:
             this.memberOperation(this.layerType.payCode);
             break;
+          case 1:
+            this.memberOperation(this.layerType.payCode);
+            break;
           case 2:
             this.payForByRechargeOrder(this.payInfo.payType);
             break;

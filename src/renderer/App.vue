@@ -12,7 +12,7 @@
         if (!this.userInfo) {
           this.$router.push("/login");
         } else {
-          this.$router.push("/reservation");
+          this.$router.push("/form");
         }
     }
   }
