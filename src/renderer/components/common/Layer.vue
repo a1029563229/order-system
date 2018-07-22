@@ -11,22 +11,20 @@
             </div>
             <div class="layer-operations">
                 <el-button v-if="cancel" @click="btnHandler(false)">{{cancel}}</el-button>
-                <el-button v-if="confirm" type="primary" @click="btnHandler(true)">{{confirm}}</el-button>
+                <el-button v-if="confirm" type="primary" @click="btnHandler(true)" :loading="isLoading">{{confirm}}</el-button>
             </div>
         </div>
     </section>
 </template>
 <script>
-import {
-  mapActions
-} from "vuex";
+import { mapActions } from "vuex";
 
 export default {
   name: "layer",
 
   data() {
     return {
-      
+      isLoading: false
     };
   },
 
@@ -46,13 +44,18 @@ export default {
   },
 
   methods: {
-    ...mapActions([
-      'operatingLayer'
-    ]),
+    ...mapActions(["operatingLayer"]),
 
     btnHandler(val) {
-      this.operatingLayer();
+      if (!val) {
+        this.operatingLayer();
+      }
+      this.isLoading = true;
       this.$emit("btnHandler", val);
+
+      setTimeout(() => {
+        this.isLoading = false;
+      }, 1000);
     }
   }
 };

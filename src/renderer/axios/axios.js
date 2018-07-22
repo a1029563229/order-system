@@ -18,7 +18,7 @@ axios.defaults.transformRequest = function (data) {
 
 axios.interceptors.response.use(function (response) {
   let resData = response.data;
-  if (resData.code != "1") {
+  if (resData.code != "1" && resData.code != "2") {
     switch (+resData.code) {
       default: break;
       case 0:
@@ -29,7 +29,12 @@ axios.interceptors.response.use(function (response) {
     window.$vue.$message.error(resData.msg);
     throw new Error(resData.msg);
   }
-  return resData.data;
+
+  if (resData.totalCount !== undefined && resData.totalCount !== null) {
+    return resData
+  } else {
+    return resData.data;
+  }
 }, function (error) {
   window.$vue.$message.error(error.message);
   console.error(error);

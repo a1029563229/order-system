@@ -15,18 +15,18 @@
             </el-form-item>
             <el-form-item>
                 <div class="level-control">
-                    <span>今日</span>
-                    <span>昨日</span>
-                    <span>七天</span>
+                    <span @click="getRecentData(1)">今日</span>
+                    <span @click="getRecentData(-1)">昨日</span>
+                    <span @click="getRecentData(-7)">七天</span>
                 </div>
             </el-form-item>
             <el-form-item label="支付方式" prop="payMethod">
                 <el-select v-model="searchForm.payMethod" placeholder="请选择">
                     <el-option
-                    v-for="item in payMethods"
-                    :key="item.key"
-                    :label="item.key"
-                    :value="item.value">
+                    v-for="item in payWays"
+                    :key="item.title"
+                    :label="item.title"
+                    :value="item.type">
                     </el-option>
                 </el-select>
             </el-form-item>
@@ -41,13 +41,12 @@
                 ref="multipleTable"
                 :data="receiptList"
                 tooltip-effect="dark"
-                style="width: 100%"
-                @selection-change="handleSelectionChange">
+                style="width: 100%">
                 <el-table-column
                 type="selection">
                 </el-table-column>
                 <el-table-column
-                prop="orderId"
+                prop="orderNum"
                 label="订单编号">
                 </el-table-column>
                 <el-table-column
@@ -75,7 +74,7 @@
                 <el-table-column
                 label="支付方式">
                   <template slot-scope="scope">
-                    <span>{{ scope.row.payMethod | payMethod(payMethods) }}</span>
+                    <span>{{ scope.row.payMethod | payMethod(payWays) }}</span>
                   </template>
                 </el-table-column>
                 <el-table-column
@@ -86,11 +85,12 @@
                 </el-table-column>
             </el-table>
         </template>
-        <pagination></pagination>
+        <pagination :totalCount="totalCount" @current-change="handleCurrentChange"></pagination>
     </section>
 </template>
 <script>
 import Pagination from "@/components/common/pagination.vue";
+import { dateTime } from "@/filters/custom.filter";
 
 export default {
   name: "cash",
@@ -103,28 +103,10 @@ export default {
         payMethod: ""
       },
 
-      payMethods: [
-        {
-          key: "微信支付",
-          value: 0
-        },
-        {
-          key: "支付宝",
-          value: 1
-        },
-        {
-          key: "储值卡",
-          value: 2
-        },
-        {
-          key: "现金",
-          value: 3
-        }
-      ],
-
       receiptList: [],
 
-      multipleSelection: []
+      totalCount: 0,
+      currentPage: 1
     };
   },
 
@@ -138,8 +120,15 @@ export default {
       for (let key in this.searchForm) {
         if (key === "payTime") {
           if (this.searchForm[key].length > 1) {
-            params["startPayTime"] = this.searchForm[key][0];
-            params["endPayTime"] = this.searchForm[key][1];
+            // console.log(dateTime(this.searchForm[key][0], 'dateTime'));
+            params["startPayTime"] = dateTime(
+              this.searchForm[key][0].toString(),
+              "dateTime"
+            );
+            params["endPayTime"] = dateTime(
+              this.searchForm[key][1].toString(),
+              "dateTime"
+            );
           }
           continue;
         }
@@ -157,8 +146,15 @@ export default {
       this.$refs[formName].resetFields();
     },
 
-    handleSelectionChange(val) {
-      this.multipleSelection = val;
+    handleCurrentChange(currentPage) {
+      this.currentPage = currentPage;
+      this.onSubmit();
+    },
+
+    getRecentData(day) {
+      let times = this.getDateTime(day);
+      this.searchForm.payTime = [times.startTime, times.endTime];
+      this.onSubmit();
     },
 
     getReceiptList(params) {
@@ -166,23 +162,24 @@ export default {
         .post(
           "order/receipt/list",
           Object.assign({}, params, {
-            currentPage: 1
+            currentPage: this.currentPage
           })
         )
-        .then(receiptList => {
-          this.receiptList = receiptList;
+        .then(res => {
+          this.receiptList = res ? res.data || [] : [];
+          this.totalCount = res.totalCount || 0;
         });
     }
   },
 
   filters: {
-    payMethod(val, payMethods) {
-      if (!+val) return val;
+    payMethod(val, payWays) {
+      if (isNaN(+val)) return val;
 
-      let payMethod = payMethods.filter(state => state.value === +val)[0];
+      let payMethod = payWays.filter(state => state.type == val)[0];
 
       if (payMethod) {
-        return payMethod.key;
+        return payMethod.title;
       } else {
         return val;
       }

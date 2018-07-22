@@ -19,7 +19,12 @@ export const toPrice = function toPrice(price) {
         return price;
     }
 
-    let priceStr = price * 100 + '';
+    let temporaryPrice = Math.ceil(price * 100);
+    let priceStr = temporaryPrice >= 100
+        ? temporaryPrice + ""
+        : temporaryPrice >= 10
+            ? "0" + temporaryPrice
+            : "00" + temporaryPrice;
     if (!!(~priceStr.indexOf('.'))) {
         return priceStr;
     } else {

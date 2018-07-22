@@ -3,7 +3,7 @@
         <h1 class="ensure-title">桌号选择</h1>
         <p class="prompt">请确认下单桌号</p>
         <div class="sku-container">
-            <sku :skus="seatList"></sku>
+            <sku @selectSku="selectTable" :skus="seatList" keyName="homePlace"></sku>
         </div>
     </section>
 </template>
@@ -15,8 +15,10 @@ export default {
 
   data() {
     return {
-      seatList: []
-    }
+      seatList: [],
+
+      tableInfo: ""
+    };
   },
 
   components: {
@@ -25,12 +27,23 @@ export default {
 
   methods: {
     getSeatList() {
-      this.$axios.post("shop/table/list", {
-        shopId: this.userInfo.shopId
-      }).then(seatList => {
-        this.seatList = seatList;
-      })
+      this.$axios
+        .post("shop/table/list", {
+          shopId: this.userInfo.shopId
+        })
+        .then(seatList => {
+          this.seatList = seatList;
+          this.selectTable(0);
+        });
+    },
+
+    selectTable(pos) {
+      this.tableInfo = this.seatList[pos];
     }
+  },
+
+  mounted() {
+    this.getSeatList();
   }
 };
 </script>
@@ -45,7 +58,7 @@ export default {
 }
 
 .ensure-practice {
-    margin: 30px 0;
+  margin: 30px 0;
 }
 </style>
 

@@ -3,11 +3,11 @@
         <div class="member-recharge">
             <div class="recharge-item">
                 <span>会员号码</span>
-                <span>18244913996</span>
+                <span>{{memberInfo.userMobile}}</span>
             </div> 
             <div class="recharge-item">
                 <span>账户余额</span>
-                <span>￥800.00</span>
+                <span>￥{{memberInfo.nowBalance | toPrice}}</span>
             </div> 
             <el-input placeholder="请输入充值金额" v-model="amount" type="string"></el-input>
             <calculator class="calculator"></calculator>

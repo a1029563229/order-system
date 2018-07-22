@@ -3,7 +3,7 @@
         <h1 class="identity-title">身份选择</h1>
         <div>
             <p class="prompt">会员认证</p>
-            <el-button type="primary" @click="orderOperation($parent.operationType[ensureIdeType === 1 ? 'validate' : 'ensureMember'])">会员认证</el-button>
+            <el-button type="primary" @click="orderOperation($parent.operationType.validate)">会员认证</el-button>
         </div>
         <div>
             <p class="prompt">桌号认证</p>
@@ -16,9 +16,11 @@ export default {
   name: "ensureIdentity",
 
   computed: {
-      ensureIdeType() {
-          return this.$store.state.product.ensureIdeType;
-      }
+    navigatoroperationType() {
+        return this.$store.state.product.ensureIdeType === 1 
+            ? 'validate' 
+            : 'ensureOrder'
+    }
   }
 };
 </script>

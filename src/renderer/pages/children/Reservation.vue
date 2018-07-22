@@ -5,46 +5,48 @@
             <el-button type="warning" @click="evokeLayer(layerType.addReservation)">新增预约</el-button>
           </div>
           <div class="reservation-statistics">
-            今日预约 <span>15</span> 个
+            今日预约 <span>{{todayReservationCount}}</span> 个
           </div>
         </section>
-        <el-form :inline="true" :model="searchForm" :rules="rules" ref="searchForm" label-width="100px" class="search-options">
-            <el-form-item label="预约时间" prop="name">
+        <el-form :inline="true" :model="searchForm" ref="searchForm" label-width="100px" class="search-options">
+            <el-form-item label="预约时间" prop="bookTime">
                 <el-date-picker
+                v-model="searchForm.bookTime"
                 type="datetimerange"
                 range-separator="至"
                 start-placeholder="开始日期"
                 end-placeholder="结束日期">
                 </el-date-picker>
             </el-form-item>
-            <el-form-item label="过期否" prop="name">
-                <el-select v-model="value" placeholder="请选择">
+            <el-form-item label="过期否" prop="state">
+                <el-select v-model="searchForm.state" placeholder="请选择">
                     <el-option
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
+                    v-for="item in states"
+                    :key="item.key"
+                    :label="item.key"
                     :value="item.value">
                     </el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="搜索" prop="name">
-                <el-input placeholder="会员号/手机号" v-model="searchForm.name"></el-input>
+            <el-form-item label="搜索" prop="userMobile">
+                <el-input placeholder="会员号/手机号" v-model="searchForm.userMobile"></el-input>
             </el-form-item>
-            <el-form-item label="起始时间" prop="name">
+            <el-form-item label="起始时间" prop="addTime">
                 <el-date-picker
+                v-model="searchForm.addTime"
                 type="datetimerange"
                 range-separator="至"
                 start-placeholder="开始日期"
                 end-placeholder="结束日期">
                 </el-date-picker>
             </el-form-item>
-            <el-form-item label="桌号" prop="name">
-                <el-select v-model="value" placeholder="请选择">
-                    <el-option
-                    v-for="item in options"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value">
+            <el-form-item label="桌号" prop="tableId">
+                <el-select v-model="searchForm.tableId" placeholder="请选择">
+                   <el-option
+                    v-for="item in tableList"
+                    :key="item.tableId"
+                    :label="item.tableName"
+                    :value="item.tableId">
                     </el-option>
                 </el-select>
             </el-form-item>
@@ -57,48 +59,50 @@
             <el-table
                 class="table-list"
                 ref="multipleTable"
-                :data="tableData3"
+                :data="reservationList"
                 tooltip-effect="dark"
-                style="width: 100%"
-                @selection-change="handleSelectionChange">
+                style="width: 100%">
                 <el-table-column
-                type="selection">
-                </el-table-column>
-                <el-table-column
-                prop="a"
+                prop="userAccount"
                 label="会员号">
                 </el-table-column>
                 <el-table-column
-                prop="e"
+                prop="userMobile"
                 label="手机号">
                 </el-table-column>
                 <el-table-column
-                prop="f"
+                prop="bookRoundName"
                 label="发起人">
                 </el-table-column>
                 <el-table-column
-                prop="g"
                 label="发起时间">
+                  <template slot-scope="scope">
+                    <span>{{scope.row.addTime | dateTime}}</span>
+                  </template>
                 </el-table-column>
                 <el-table-column
-                prop="h"
+                prop="tableName"
                 label="桌号">
                 </el-table-column>
                 <el-table-column
-                prop="i"
                 label="预约时段">
+                  <template slot-scope="scope">
+                    <span>{{scope.row.bookStartTime | dateTime}}-{{scope.row.bookEndTime | dateTime}}</span>
+                  </template>
                 </el-table-column>
                 <el-table-column
-                prop="j"
+                prop="gameName"
                 label="预约游戏">
                 </el-table-column>
                 <el-table-column
-                prop="j"
+                prop="bookSeatNum"
                 label="预约人数">
                 </el-table-column>
                 <el-table-column
-                prop="j"
                 label="是否过期">
+                  <template slot-scope="scope">
+                    <span>{{scope.row.state === 1 ? "未过期" : "已过期"}}</span>
+                  </template>
                 </el-table-column>
                 <el-table-column
                 label="操作">
@@ -109,75 +113,49 @@
                 </el-table-column>
             </el-table>
         </template>
-        <pagination></pagination>
-        <transition name="order-operation-transition"
-            enter-active-class="animated fadeIn"
-            leave-active-class="animated fadeOut">
-            <reservation-add v-if="currentLayerType === layerType.addReservation"></reservation-add>
-        </transition>
+        <pagination :totalCount="totalCount" @current-change="handleCurrentChange"></pagination>
+          <transition name="order-operation-transition"
+              enter-active-class="animated fadeIn"
+              leave-active-class="animated fadeOut">
+            <reservation-add v-if="currentLayerType === layerType.addReservation" @memberOperation="evokeLayer"></reservation-add>
+          </transition>
     </section>
 </template>
 <script>
 import Pagination from "@/components/common/pagination.vue";
+import { dateTime } from "@/filters/custom.filter";
 import { ReservationAdd } from "@/components/reservation";
 
 export default {
-  name: "reservation",
+  name: "cash",
 
   data() {
     return {
       searchForm: {
-        name: "",
-        region: "",
-        date1: "",
-        date2: "",
-        delivery: false,
-        type: [],
-        resource: "",
-        desc: ""
+        state: "",
+        userMobile: "",
+        bookTime: [],
+        addTime: [],
+        tableId: ""
       },
-      options: [
+
+      states: [
         {
-          value: "选项1",
-          label: "黄金糕"
+          key: "未过期",
+          value: 1
         },
         {
-          value: "选项2",
-          label: "双皮奶"
-        },
-        {
-          value: "选项3",
-          label: "蚵仔煎"
-        },
-        {
-          value: "选项4",
-          label: "龙须面"
-        },
-        {
-          value: "选项5",
-          label: "北京烤鸭"
+          key: "已过期",
+          value: 2
         }
       ],
-      value: "",
-      rules: {},
+      tableList: [],
+      reservationList: [],
 
-      tableData3: [
-        {
-          a: 1,
-          b: 2,
-          c: 3,
-          d: 4,
-          e: 5,
-          f: 6,
-          g: 7,
-          h: 8,
-          i: 9,
-          j: 10,
-          k: 11
-        }
-      ],
+      totalCount: 0,
+      currentPage: 1,
 
-      multipleSelection: []
+      todayReservationCount: 0
     };
   },
 
@@ -187,20 +165,106 @@ export default {
   },
 
   methods: {
+    onSubmit() {
+      let params = {};
+      for (let key in this.searchForm) {
+        if (key === "bookTime") {
+          if (this.searchForm[key].length > 1) {
+            // console.log(dateTime(this.searchForm[key][0], 'dateTime'));
+            params["bookStartTime"] = dateTime(
+              this.searchForm[key][0].toString(),
+              "dateTime"
+            );
+            params["bookEndTime"] = dateTime(
+              this.searchForm[key][1].toString(),
+              "dateTime"
+            );
+          }
+
+          if (key === "addTime") {
+            if (this.searchForm[key].length > 1) {
+              // console.log(dateTime(this.searchForm[key][0], 'dateTime'));
+              params["startAddTime"] = dateTime(
+                this.searchForm[key][0].toString(),
+                "dateTime"
+              );
+              params["endAddTime"] = dateTime(
+                this.searchForm[key][1].toString(),
+                "dateTime"
+              );
+            }
+          }
+          continue;
+        }
+
+        if (this.searchForm[key] !== "") {
+          params[key] = this.searchForm[key];
+          continue;
+        }
+      }
+
+      this.getReservationList(params);
+    },
+
     resetForm(formName) {
       this.$refs[formName].resetFields();
     },
 
-    handleSelectionChange(val) {
-      this.multipleSelection = val;
+    handleCurrentChange(currentPage) {
+      this.currentPage = currentPage;
+      this.onSubmit();
+    },
+
+    getRecentData(day) {
+      let times = this.getDateTime(day);
+      this.searchForm.payTime = [times.startTime, times.endTime];
+      this.onSubmit();
+    },
+
+    getReservationList(params) {
+      this.$axios
+        .post(
+          "user/vip/bespeak/list",
+          Object.assign({}, params, {
+            currentPage: this.currentPage
+          })
+        )
+        .then(res => {
+          this.reservationList = res ? res.data || [] : [];
+          this.totalCount = res.totalCount || 0;
+        });
+    },
+
+    getTodayReservationCount() {
+      this.$axios.post("user/vip/bespeak/count").then(todayReservationCount => {
+        this.todayReservationCount = todayReservationCount;
+      });
+    },
+
+    getTableList() {
+      this.$axios.post("shop/table/list").then(tableList => {
+        this.tableList = tableList;
+      });
+    }
+  },
+
+  filters: {
+    payMethod(val, payWays) {
+      if (isNaN(+val)) return val;
+
+      let payMethod = payWays.filter(state => state.type == val)[0];
+
+      if (payMethod) {
+        return payMethod.title;
+      } else {
+        return val;
+      }
     }
   },
 
   mounted() {
-    var i = 4;
-    while (i--) {
-      this.tableData3 = [...this.tableData3, ...this.tableData3];
-    }
+    this.getTableList();
+    this.getReservationList();
   }
 };
 </script>
@@ -257,7 +321,7 @@ export default {
 }
 
 .animated {
-  animation-duration: .3s;
+  animation-duration: 0.3s;
 }
 </style>
 

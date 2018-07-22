@@ -1,14 +1,17 @@
 <template>
-    <section class="goods-sku">
+    <section class="goods-sku" v-if="currentGoods">
         <h1 class="goods-title">规格 - {{currentGoods.productName}}</h1>
         <p class="prompt">请选择商品规格</p>
-        <div v-for="(attr, index) in attributes" :key="index">
+        <div v-for="(attr, index) in attributes" :key="index" v-if="attributes.length > 0">
             <div class="goods-practice">
                 {{attr.attributeName | lenLimit(12)}}
             </div>
             <div class="sku-container">
-                <sku @selectSku="selectSku($event, index)" :skus="attr.attrValueList" keyName="attributeValueName"></sku>
+                <sku @selectSku="selectSku($event, index)" :skus="attr.attrValueList" keyName="attributeValueName" valueName="attributeValueId" :value="attList[index]"></sku>
             </div>
+        </div>
+        <div class="sku-none" v-if="attributes.length === 0">
+            当前商品暂无规格
         </div>
     </section>
 </template>
@@ -39,20 +42,18 @@ export default {
     },
 
     getAttributes() {
-      let productList = this.$store.state.product.productList;
-      let currentIndex = this.$store.state.product.currentIndex;
-      let specAttributeIds = productList[currentIndex].specAttributeIds;
+      let productList = this.$store.state.product.productList,
+        currentIndex = this.$store.state.product.currentIndex,
+        productId = productList[currentIndex].productId;
+      this.attList = [...productList[currentIndex].attList] || [];
 
       this.$axios
         .post("shop/attribute/list", {
           shopId: this.userInfo.shopId,
-          specAttributeIds
+          productId
         })
         .then(attributes => {
-          this.attributes = attributes;
-          this.attributes.forEach((attr, index) => {
-            this.modifyAttrs(index, 0);
-          });
+          this.attributes = attributes || [];
         });
     },
 
@@ -69,7 +70,14 @@ export default {
   },
 
   mounted() {
-    this.getAttributes();
+    // TestPoint
+    try {
+      this.getAttributes();
+    } catch (e) {
+      setTimeout(() => {
+        this.getAttributes();
+      }, 500);
+    }
   }
 };
 </script>

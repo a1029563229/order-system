@@ -1,62 +1,50 @@
 
 const state = {
-    productList: [
-        {
-            "updatedTime": "2018-06-22T09:51:00.000+0000",
-            "productId": 2233,
-            "salePrice": 120,
-            "smarketPrice": 0,
-            "originalImg": "/aigou/shop/20180621/160797a5-7b26-4992-90d5-0c042c71b814.jpg",
-            "cateId1": 1035,
-            "cateId2": 1036,
-            "thumbImg": "/aigou/shop/20180621/160797a5-7b26-4992-90d5-0c042c71b814.jpg",
-            "cateId3": 1037,
-            "attList": [
-                {
-                    "attributeId": 2310,
-                    "attributeValueId": 9740,
-                    "attributeValueName": "621",
-                    "attributeName": "商品测试621"
-                }
-            ],
-            "attrName": "621",
-            "productNum": "152956758172129603",
-            "specAttributeValIds": "9740",
-            "managerId": 2668,
-            "productPinyin": "CSSP",
-            "productName": "2测试商品标题621",
-            "specConfig": "1",
-            "specAttributeIds": "2310",
-            "integral": 0,
-            "createdTime": "2018-06-21T07:53:03.000+0000",
-            "state": 0,
-            "shopId": 1334,
-            "stock": 99,
-            "skuCustom": "2311:测试属性621:621",
-            "officialState": 1,
-            "count": 1
-        }
-    ],
+    productList: [],
 
     currentIndex: 0,
 
-    memberInfo: null,
-    ensureIdeType: 1
+    // memberInfo: null,
+    memberInfo: {
+        "nowBalance": 994000,
+        "discountLevel": 98,
+        "userLevel": "vip2",
+        "userIdStr": "96cc4a70970c4caf8a4d659d3bea7733",
+        "userMobile": "15220060077",
+        "nickName": "偷偷",
+        "userId": 12437
+    },
+
+    tableInfo: null,
+    ensureIdeType: 1,
+    menuType: "mainMenu"
 }
 
 const mutations = {
+    SET_PRODUCT_LIST(state, productList) {
+        state.productList = productList;
+    },
+
     ADD_PRODUCT(state, product) {
         state.productList.push(Object.assign({}, product, {
             count: 1,
-            attrName: product.attList 
+            attrName: product.attList
                 ? product.attList.map(attr => attr.attributeValueName).join("、")
                 : "暂无规格"
         }));
+
+        if (state.menuType === 'mainMenu') {
+            state.menuType = 'orderMenu';
+        }
     },
 
     REMOVE_PRODUCT(state) {
         state.productList.splice(state.currentIndex, 1);
         state.currentIndex = state.currentIndex - 1 > 0 ? state.currentIndex - 1 : 0;
+    },
+
+    CLEAR_PRODUCT_LIST(state) {
+        state.productList = [];
     },
 
     SET_CURRENT_OPERATION_PRODUCT_INDEX(state, index) {
@@ -66,6 +54,12 @@ const mutations = {
     MODIFY_PRODUCT_COUNT(state, count) {
         let currentIndex = state.currentIndex;
         state.productList[currentIndex].count = parseFloat(count);
+    },
+
+    SET_PRODUCT_ATTR_LIST(state, attList) {
+        let currentIndex = state.currentIndex;
+        state.productList[currentIndex]['attList'] = attList;
+        state.productList[currentIndex]['attrName'] = attList.map(attr => attr.attributeValueName).join("、");
     },
 
     SET_PRODUCT_PROPERTY(state, obj) {
@@ -79,10 +73,29 @@ const mutations = {
 
     SET_MEMBER_INFO(state, memberInfo) {
         state.memberInfo = memberInfo;
+        state.tableInfo = null;
+    },
+
+    SET_TABLE_INFO(state, tableInfo) {
+        state.tableInfo = tableInfo;
+        state.memberInfo = null;
+    },
+
+    CLEAR_VALIDATE_INFO(state) {
+        state.memberInfo = null;
+        state.tableInfo = null;
+    },
+
+    TOGGLE_MENU_TYPE(state, menuType) {
+        state.menuType = menuType;
     }
 }
 
 const actions = {
+    setProductList({ commit }, productList) {
+        commit("SET_PRODUCT_LIST", productList)
+    },
+
     addProduct({ commit }, product) {
         commit('ADD_PRODUCT', product);
     },
@@ -91,12 +104,20 @@ const actions = {
         commit('REMOVE_PRODUCT')
     },
 
+    clearProductList({ commit }) {
+        commit("CLEAR_PRODUCT_LIST");
+    },
+
     setCurrent({ commit }, index) {
         commit('SET_CURRENT_OPERATION_PRODUCT_INDEX', index);
     },
 
     modifyCount({ commit }, count) {
         commit('MODIFY_PRODUCT_COUNT', count);
+    },
+
+    setAttrList({ commit }, attList) {
+        commit("SET_PRODUCT_ATTR_LIST", attList);
     },
 
     setProperty({ commit }, obj) {
@@ -109,6 +130,18 @@ const actions = {
 
     setMemberInfo({ commit }, memberInfo) {
         commit("SET_MEMBER_INFO", memberInfo);
+    },
+
+    setTableInfo({ commit }, tableInfo) {
+        commit("SET_TABLE_INFO", tableInfo);
+    },
+
+    clearValidateInfo({ commit }) {
+        commit("CLEAR_VALIDATE_INFO");
+    },
+    
+    toggleMenu({commit}, menuType) {
+        commit("TOGGLE_MENU_TYPE", menuType);
     }
 }
 

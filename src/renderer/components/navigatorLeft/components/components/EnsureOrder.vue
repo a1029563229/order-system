@@ -5,36 +5,60 @@
             <p class="prompt">请确认订单内容</p>
             <div class="recharge-item">
                 <span>商品数</span>
-                <span>2</span>
+                <span>{{orderInfo.count}}</span>
             </div>
             <div class="recharge-item">
                 <span>订单金额</span>
-                <span>￥12.00</span>
+                <span>￥{{orderInfo.totalPrice | toPrice}}</span>
             </div>
         </div>
-        <div>
+        <div v-if="memberInfo">
             <p class="prompt">会员信息</p>
             <div class="recharge-item">
                 <span>会员账号</span>
-                <span>18244913996</span>
+                <span>{{memberInfo.userMobile}}</span>
             </div>
             <div class="recharge-item">
                 <span>会员折扣</span>
-                <span>100%</span>
+                <span>{{memberInfo.discountLevel}}%</span>
+            </div>
+        </div>
+        <div v-if="tableInfo">
+            <p class="prompt">会员信息</p>
+            <div class="recharge-item">
+                <span>桌号</span>
+                <span>{{tableInfo.tableName}}</span>
             </div>
         </div>
         <div>
             <p class="prompt">应付金额</p>
             <div class="recharge-item">
                 <span>应付金额</span>
-                <span>￥12.00</span>
+                <span>￥{{payPrice | toPrice}}</span>
             </div>
         </div>
     </section>
 </template>
 <script>
+import { goodsMixin } from "../goods.mixin";
+
 export default {
-  name: "ensureOrder"
+  name: "ensureOrder",
+
+  mixins: [goodsMixin],
+
+  data() {
+    return {
+      payPrice: 0
+    };
+  },
+
+  mounted() {
+    this.payPrice = this.computedPayPrice(
+      this.orderInfo.totalPrice,
+      this.memberInfo
+    );
+  }
 };
 </script>
 <style lang="less" scoped>

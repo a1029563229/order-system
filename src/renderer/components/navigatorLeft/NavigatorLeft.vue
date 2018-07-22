@@ -3,22 +3,21 @@
         <transition name="order-operation-transition"
             enter-active-class="animated fadeInRight"
             leave-active-class="animated fadeOutLeft">
-          <order-menu @toggleMenu="toggleMenu" v-if="menuType === 'orderMenu'"></order-menu>
-          <main-menu @toggleMenu="toggleMenu" v-if="menuType === 'mainMenu'"></main-menu>
+          <order-menu v-if="menuType === 'orderMenu'"></order-menu>
+          <main-menu v-if="menuType === 'mainMenu'"></main-menu>
         </transition>
     </section>
 </template>
 <script>
 import MainMenu from "./components/MainMenu";
 import OrderMenu from "./components/OrderMenu";
+import { mapActions } from "vuex";
 
 export default {
   name: "navigatorLeft",
 
   data() {
-    return {
-      menuType: "mainMenu"
-    };
+    return {};
   },
 
   components: {
@@ -27,8 +26,12 @@ export default {
   },
 
   methods: {
-    toggleMenu(menuType) {
-      this.menuType = menuType;
+    ...mapActions(["toggleMenu"])
+  },
+
+  computed: {
+    menuType() {
+      return this.$store.state.product.menuType;
     }
   },
 
@@ -47,11 +50,11 @@ export default {
 }
 
 .animated {
-  animation-duration: .5s;
+  animation-duration: 0.5s;
 }
 </style>
 <style lang="less">
-.navigator-left section{
+.navigator-left section {
   position: relative;
 }
 </style>

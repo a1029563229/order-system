@@ -1,17 +1,26 @@
 <template>
     <section class="pagination">
         <el-pagination
-            :page-size="20"
+            @current-change="handleCurrentChange"
+            :page-size="10"
             :pager-count="5"
             layout="prev, pager, next"
-            :total="1000">
+            :total="totalCount">
         </el-pagination>
         <slot></slot>
     </section>
 </template>
 <script>
 export default {
-  name: "pagination"
+  name: "pagination",
+
+  props: ["totalCount"],
+
+  methods: {
+    handleCurrentChange(val) {
+      this.$emit("current-change", val);
+    }
+  }
 };
 </script>
 <style lang="less" scoped>

@@ -15,9 +15,9 @@
             </el-form-item>
             <el-form-item>
                 <div class="level-control">
-                    <span>今日</span>
-                    <span>昨日</span>
-                    <span>七天</span>
+                    <span @click="getRecentData(1)">今日</span>
+                    <span @click="getRecentData(-1)">昨日</span>
+                    <span @click="getRecentData(-7)">七天</span>
                 </div>
             </el-form-item>
             <el-form-item label="桌号" prop="tableNum">
@@ -103,7 +103,10 @@
                   <template slot-scope="scope">
                     <el-checkbox-group>
                       <div v-for="(product, index) in scope.row.productList" :key="index">
-                          <el-checkbox :label="product.productName"></el-checkbox>
+                         <el-checkbox-group v-model="scope.row.selectedGoods">
+                          <el-checkbox :label="index + ' ' + product.productName + ' 数量： ' + product.count">
+                          </el-checkbox>
+                         </el-checkbox-group>
                       </div>
                     </el-checkbox-group>
                   </template>
@@ -116,25 +119,43 @@
                 </el-table-column>
             </el-table>
         </template>
-        <pagination>
+        <pagination :totalCount="totalCount" @current-change="handleCurrentChange">
           <section class="pagination-slot">
              <div>
-                合计单数<span>（单）</span>：{{orderList.length}}
+                合计单数<span>（单）</span>：{{totalCount}}
             </div>
             <div>
                 合计金额<span>（元）</span>：{{allMoney}}
             </div>
             <div>
-                <el-button type="primary">支付</el-button>
+                <el-button type="primary" @click="sortOrder">支付</el-button>
                 <el-button type="warning">加单</el-button>
                 <el-button>取消</el-button>
             </div>
           </section>
         </pagination>
+          <transition name="order-operation-transition"
+              enter-active-class="animated fadeIn"
+              leave-active-class="animated fadeOut">
+            <member-info v-if="currentLayerType === layerType.info" @memberOperation="evokeLayer"></member-info>
+            <member-pay-way v-if="currentLayerType === layerType.payWay" @memberOperation="evokeLayer"></member-pay-way>
+            <member-pay-code v-if="currentLayerType === layerType.payCode" @memberOperation="evokeLayer"></member-pay-code>
+            <member-pay-order v-if="currentLayerType === layerType.payOrder" @memberOperation="evokeLayer"></member-pay-order>
+            <member-pay-result v-if="currentLayerType === layerType.payResult" @memberOperation="evokeLayer"></member-pay-result>
+          </transition>
     </section>
 </template>
 <script>
 import Pagination from "@/components/common/pagination.vue";
+import { mapActions } from "vuex";
+import { dateTime } from "@/filters/custom.filter";
+import {
+  MemberPayWay,
+  MemberPayCode,
+  MemberPayResult,
+  MemberPayOrder,
+  MemberInfo
+} from "@/components/member";
 
 export default {
   name: "order",
@@ -151,14 +172,15 @@ export default {
 
       tableList: [],
       seatList: [],
+      currentPage: 1,
       orderStates: [
         {
           key: "待支付",
-          value: 1
+          value: 0
         },
         {
           key: "已支付",
-          value: 2
+          value: 4
         },
         {
           key: "已取消",
@@ -168,22 +190,44 @@ export default {
 
       orderList: [],
 
-      multipleSelection: []
+      selectedOrderList: [],
+
+      totalCount: 0,
+      currentPage: 1
     };
   },
 
   components: {
-    Pagination
+    Pagination,
+    MemberPayWay,
+    MemberPayResult,
+    MemberPayCode,
+    MemberPayOrder,
+    MemberInfo
   },
 
   methods: {
+    ...mapActions(["setProductList", "setUserPayInfo", "setPayModel"]),
+
+    handleCurrentChange(currentPage) {
+      this.currentPage = currentPage;
+      this.onSubmit();
+    },
+
     onSubmit() {
       let params = {};
       for (let key in this.searchForm) {
         if (key === "createdTime") {
           if (this.searchForm[key].length > 1) {
-            params["startCreatedTime"] = this.searchForm[key][0];
-            params["endCreatedTime"] = this.searchForm[key][1];
+            // console.log(dateTime(this.searchForm[key][0], 'dateTime'));
+            params["startCreatedTime"] = dateTime(
+              this.searchForm[key][0].toString(),
+              "dateTime"
+            );
+            params["endCreatedTime"] = dateTime(
+              this.searchForm[key][1].toString(),
+              "dateTime"
+            );
           }
           continue;
         }
@@ -202,7 +246,60 @@ export default {
     },
 
     handleSelectionChange(val) {
-      this.multipleSelection = val;
+      this.selectedOrderList = val;
+    },
+
+    getRecentData(day) {
+      let times = this.getDateTime(day);
+      this.searchForm.createdTime = [times.startTime, times.endTime];
+      this.onSubmit();
+    },
+
+    sortOrder() {
+      if (this.selectedOrderList.length === 0) {
+        this.$message.warning("请至少选择一个订单支付");
+        return;
+      }
+
+      if (this.selectedOrderList.some(order => +order.orderState === 4)) {
+        this.$message.warning("请选择未支付的订单支付");
+        return;
+      }
+
+      let productList = [];
+      this.selectedOrderList.forEach(order => {
+        let selectedGoods = order.selectedGoods.map(
+          label => +label.slice(0, 1)
+        );
+        let goodsList = order.productList.filter((product, index) =>
+          this.include(selectedGoods, index)
+        );
+        productList = [...productList, ...goodsList];
+      });
+
+      if (productList.length === 0) {
+        this.$message.warning("请至少选择一个商品支付");
+        return;
+      }
+
+      this.setUserPayInfo({
+        key: "orderCount",
+        value: this.selectedOrderList.length
+      });
+      this.setUserPayInfo({
+        key: "orderList",
+        value: this.selectedOrderList
+      });
+      this.setUserPayInfo({
+        key: "payType",
+        value: 2
+      });
+      this.setProductList(productList);
+      this.validateMemberInfo();
+    },
+
+    validateMemberInfo() {
+      this.evokeLayer(this.layerType.info);
     },
 
     getOrderList(params = {}) {
@@ -210,11 +307,18 @@ export default {
         .post(
           "order/list",
           Object.assign({}, params, {
-            currentPage: 1
+            currentPage: this.currentPage
           })
         )
-        .then(orderList => {
-          this.orderList = orderList;
+        .then(res => {
+          this.orderList =
+            res.data.map((order, sort) =>
+              Object.assign({}, order, {
+                selectedGoods: [],
+                sort
+              })
+            ) || [];
+          this.totalCount = res.totalCount;
         });
     },
 
@@ -227,7 +331,7 @@ export default {
 
   filters: {
     orderState(val, orderStates) {
-      if (!+val) return val;
+      if (isNaN(!+val)) return val;
 
       let orderState = orderStates.filter(state => state.value === +val)[0];
 
@@ -242,7 +346,7 @@ export default {
   computed: {
     allMoney() {
       return this.orderList.reduce(
-        (money, order) => money + order.totalPrice,
+        (money, order) => (money * 100 + order.totalPrice * 100) / 100,
         0
       );
     }
@@ -262,8 +366,8 @@ export default {
   },
 
   mounted() {
-    this.getOrderList();
     this.getTableList();
+    this.getOrderList();
   }
 };
 </script>

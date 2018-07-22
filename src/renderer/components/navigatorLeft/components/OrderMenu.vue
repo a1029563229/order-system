@@ -7,17 +7,21 @@
                         <el-button type="primary" @click="toggleMenu('mainMenu')">菜单</el-button>
                   </div>
                   <div class="button-options flex-left">
-                        <el-button type="primary" @click="locationHref('/order')">挂单</el-button>
-                        <el-badge :value="12" class="item">
+                        <el-button type="primary" @click="addOrder">挂单</el-button>
+                        <el-badge :value="orderNotPayCount" class="item">
                           <el-button type="primary" @click="locationHref('/order')">取单</el-button>
                         </el-badge>
-                        <el-button type="primary" @click="toggleMenu('mainMenu')">取消</el-button>
+                        <el-button type="primary" @click="clearOrderInfo">垃圾箱</el-button>
                   </div>
               </div>
-              <div class="nickname" @click="switchOperation(operationType.ensureIdentity);modifyEnsureType(1);">
+              <div class="nickname" @click="switchOperation(operationType.ensureIdentity);modifyEnsureType(1);ensureModel = 1;">
                   <template v-if="memberInfo">
-                    <span>会员昵称</span>    
-                    <p>{{memberInfo.nickName}}</p>
+                    <span>会员账号</span>    
+                    <p>{{memberInfo.userMobile}}</p>
+                  </template>
+                  <template v-else-if="tableInfo">
+                    <span>桌号</span>    
+                    <p>{{tableInfo.tableName | lenLimit(5)}}</p>
                   </template>
                   <div class="validate-identity" v-else>
                     身份验证
@@ -45,7 +49,7 @@
                   :class="{'active': currentOperation === operation.identifier}">{{operation.name}}</el-button>
               </div>
           </div>
-          <el-button class="payment" type="primary" @click="switchOperation(operationType.ensureIdentity)">收银￥{{orderInfo.totalPrice | toPrice}}</el-button>
+          <el-button class="payment" type="primary" @click="readyToPayFor">收银￥{{orderInfo.totalPrice | toPrice}}</el-button>
           <transition name="order-operation-transition"
               enter-active-class="animated fadeIn"
               leave-active-class="animated fadeOut">
@@ -55,11 +59,11 @@
                 <goods-sku ref="goodsSku" v-if="currentOperation === operationType.sku"></goods-sku>
                 <goods-remark ref="goodsRemark" v-if="currentOperation === operationType.remark"></goods-remark>
                 <goods-seat ref="goodsSeat" v-if="currentOperation === operationType.seat"></goods-seat>
-                <member-validate ref="memberValidate" v-if="currentOperation === operationType.validate"></member-validate>
+                <member-validate ref="memberValidate" v-if="currentOperation === operationType.validate" @orderOperation="switchOperation"></member-validate>
                 <ensure-identity v-if="currentOperation === operationType.ensureIdentity" @orderOperation="switchOperation"></ensure-identity>
                 <ensure-order v-if="currentOperation === operationType.ensureOrder"></ensure-order>
                 <ensure-member v-if="currentOperation === operationType.ensureMember"></ensure-member>
-                <ensure-seat v-if="currentOperation === operationType.ensureSeat"></ensure-seat>
+                <ensure-seat ref="ensureSeat" v-if="currentOperation === operationType.ensureSeat"></ensure-seat>
               </div>
               <div class="floating-close" @click="clearOperation">X</div>
               <el-button class="ensure-btn" type="primary" @click="operationHandler">确认</el-button>
@@ -68,9 +72,11 @@
           <transition name="order-operation-transition"
               enter-active-class="animated fadeIn"
               leave-active-class="animated fadeOut">
+            <member-info v-if="currentLayerType === layerType.info" @memberOperation="evokeLayer"></member-info>
             <member-pay-way v-if="currentLayerType === layerType.payWay" @memberOperation="evokeLayer"></member-pay-way>
             <member-pay-code v-if="currentLayerType === layerType.payCode" @memberOperation="evokeLayer"></member-pay-code>
-            <member-pay-result v-if="currentLayerType === layerType.payResult"></member-pay-result>
+            <member-pay-order v-if="currentLayerType === layerType.payOrder" @memberOperation="evokeLayer"></member-pay-order>
+            <member-pay-result v-if="currentLayerType === layerType.payResult" @memberOperation="evokeLayer"></member-pay-result>
           </transition>
       </section>
       <transition name="order-operation-transition"
@@ -82,6 +88,7 @@
 </template>
 <script>
 import { mapActions } from "vuex";
+import { goodsMixin } from "./goods.mixin";
 
 import {
   GoodsCount,
@@ -98,7 +105,9 @@ import {
 import {
   MemberPayWay,
   MemberPayCode,
-  MemberPayResult
+  MemberPayResult,
+  MemberPayOrder,
+  MemberInfo
 } from "@/components/member";
 
 export default {
@@ -106,6 +115,8 @@ export default {
 
   data() {
     return {
+      orderNotPayCount: 0,
+
       operations: [
         {
           name: "数量",
@@ -141,9 +152,11 @@ export default {
         ensureSeat: "ENSURE_SEAT"
       },
       currentOperation: "",
-      previousOperation: ""
+      ensureModel: 0 // 1 认证 2 认证后支付
     };
   },
+
+  mixins: [goodsMixin],
 
   components: {
     GoodsCount,
@@ -156,10 +169,10 @@ export default {
     EnsureMember,
     EnsureSeat,
     MemberPayWay,
-    MemberPayResult,
-    MemberPayWay,
     MemberPayCode,
-    MemberPayResult
+    MemberPayResult,
+    MemberPayOrder,
+    MemberInfo
   },
 
   methods: {
@@ -167,9 +180,67 @@ export default {
       "setCurrent",
       "modifyCount",
       "removeProduct",
+      "setAttrList",
       "setProperty",
-      "modifyEnsureType"
+      "modifyEnsureType",
+      "setTableInfo",
+      "setPayModel",
+      "setUserPayInfo",
+      "toggleMenu"
     ]),
+
+    addOrder() {
+      if (!this.validateOrderCondition()) return;
+
+      let loading = this.$loading();
+      let payPrice = this.computedPayPrice(
+          this.orderInfo.totalPrice,
+          this.memberInfo
+        ),
+        userMobile = this.memberInfo ? this.memberInfo.userMobile : null,
+        suTspableId = this.tableInfo ? this.tableInfo.tableId : null;
+
+      this.$axios
+        .post("order/suspend", {
+          totalPrice: this.orderInfo.totalPrice,
+          payPrice,
+          userMobile,
+          suTspableId,
+          productList: JSON.stringify(this.goodsList)
+        })
+        .then(res => {
+          loading.close();
+          this.clearOrderInfo();
+          this.$message.success("挂单成功！");
+          this.$router.push("/order");
+        });
+    },
+
+    validateOrderCondition() {
+      try {
+        if (!this.goodsList.length) {
+          throw new Error("请至少选择一件商品！");
+        }
+
+        if (!this.memberInfo && !this.tableInfo) {
+          throw new Error("请完成会员认证或桌号认证！");
+        }
+      } catch (e) {
+        this.$message.warning(e.message);
+        return false;
+      }
+
+      return true;
+    },
+
+    readyToPayFor() {
+      if (!this.goodsList.length) {
+        this.$message.warning("请选择至少一项商品！");
+        return;
+      }
+      this.ensureModel = 2;
+      this.switchOperation(this.operationType.ensureIdentity);
+    },
 
     chooseOperationByIndex(index) {
       if (!this.goodsList.length) {
@@ -184,7 +255,6 @@ export default {
     },
 
     switchOperation(operation) {
-      this.previousOperation = this.currentOperation;
       this.currentOperation = operation;
     },
 
@@ -193,19 +263,6 @@ export default {
     },
 
     operationHandler() {
-      const prevOperations = [
-        this.operationType.ensureMember,
-        this.operationType.ensureSeat
-      ];
-
-      if (
-        this.include(prevOperations, this.currentOperation) &&
-        this.previousOperation
-      ) {
-        this.switchOperation(this.previousOperation);
-        return;
-      }
-
       switch (this.currentOperation) {
         default:
           this.clearOperation();
@@ -229,13 +286,25 @@ export default {
           break;
         case this.operationType.validate:
           this.validateMember();
-          // this.clearOperation();
+          break;
+        case this.operationType.ensureSeat:
+          this.setTableInfo(this.$refs.ensureSeat.tableInfo);
+          if (this.ensureModel === 1) {
+            this.switchOperation(this.operationType.ensureIdentity);
+          } else {
+            this.switchOperation(this.operationType.ensureOrder);
+          }
           break;
         case this.operationType.ensureIdentity:
-          this.switchOperation(this.operationType.ensureOrder);
+          this.identityHandler();
           break;
         case this.operationType.ensureOrder:
           this.clearOperation();
+          this.setPayModel(1);
+          this.setUserPayInfo({
+            key: "payType",
+            value: 1
+          });
           this.evokeLayer(this.layerType.payWay);
           break;
       }
@@ -251,7 +320,39 @@ export default {
     },
 
     setGoodsSku() {
-      this.setCustomProperty("goodsSku", "attList");
+      this.setAttrList(this.$refs.goodsSku.attList);
+      this.searchProductPrice();
+    },
+
+    searchProductPrice() {
+      let currentProduct = this.goodsList[this.activeGoodsIndex],
+        attList = currentProduct.attList
+          .map(product => product.attributeValueId)
+          .join(","),
+        productId = currentProduct.productId;
+
+      if (!attList) {
+        return;
+      }
+      this.$axios
+        .post("shop/product/price", {
+          productId,
+          attList
+        })
+        .then(salePriceList => {
+          if (!this.isDef(salePriceList)) {
+            this.$message.error("该商品数据出现问题，请联系管理员处理！");
+            return;
+          }
+
+          let salePrice = salePriceList[0].salePrice;
+          if (!isNaN(+salePrice)) {
+            this.setProperty({
+              key: "salePrice",
+              value: +salePrice
+            });
+          }
+        });
     },
 
     setCustomProperty(refName, name) {
@@ -265,6 +366,22 @@ export default {
     validateMember() {
       let memberValidate = this.$refs.memberValidate;
       memberValidate.validateMember();
+    },
+
+    identityHandler() {
+      if (this.memberInfo || this.tableInfo) {
+        this.switchOperation(this.operationType.ensureOrder);
+      } else {
+        this.$message.warning("请完成会员认证或桌号认证！");
+      }
+    },
+
+    setOrderNotPayCount() {
+      this.$axios
+        .post("order/list", { currentPage: 1, orderState: 0 })
+        .then(res => {
+          this.orderNotPayCount = res.totalCount;
+        });
     }
   },
 
@@ -275,11 +392,11 @@ export default {
 
     activeGoodsIndex() {
       return this.$store.state.product.currentIndex;
-    },
-
-    memberInfo() {
-      return this.$store.state.product.memberInfo;
     }
+  },
+
+  mounted() {
+    this.setOrderNotPayCount();
   }
 };
 </script>

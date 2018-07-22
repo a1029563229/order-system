@@ -30,13 +30,15 @@
     </section>
 </template>
 <script>
+import { mapActions } from "vuex";
+
 export default {
   name: "mainMenu",
 
   data() {
     return {
       value: true,
-      
+
       navigatorList: [
         {
           title: "点单",
@@ -68,6 +70,8 @@ export default {
   },
 
   methods: {
+    ...mapActions(["toggleMenu"]),
+
     navigatorHandler(index) {
       this.locationHref(this.navigatorList[index].route);
 

@@ -29,17 +29,28 @@ export default {
     valueName: {
       type: String,
       default: ''
+    },
+
+    value: {
+      type: Object,
+      default: null
     }
   },
 
   methods: {
     selectSku(index) {
       this.$emit("selectSku", index);
+    },
+
+    matchValue() {
+      if (!this.value || !this.valueName) return;
+      let value = this.value[this.valueName];
+      this.activeIndex = this.skus.findIndex((item) => item[this.valueName] === value);
     }
   },
 
   mounted() {
-
+    this.matchValue();
   }
 };
 </script>

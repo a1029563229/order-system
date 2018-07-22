@@ -26,7 +26,7 @@
           </li>
           <li>
             <span>会员折扣</span>
-            <span>{{memberInfo.discountLevel}}</span>
+            <span>{{memberInfo.discountLevel}}%</span>
           </li>
         </ul>
       </template>
@@ -55,7 +55,7 @@ export default {
   },
 
   methods: {
-    ...mapActions(["setCalculatorVal", "setMemberInfo"]),
+    ...mapActions(["setCalculatorVal", "setMemberInfo", "setUserPayInfo"]),
 
     validateMember() {
       switch (this.operationStep) {
@@ -65,8 +65,12 @@ export default {
           this.validateUser();
           break;
         case 2:
-          this.$parent.clearOperation();
           this.operationStep = 1;
+          if (this.$parent.ensureModel === 1) {
+            this.$parent.clearOperation();
+          } else {
+            this.orderOperation(this.$parent.operationType.ensureOrder);
+          }
           break;
       }
     },
