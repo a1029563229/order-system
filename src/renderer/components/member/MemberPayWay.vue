@@ -4,7 +4,7 @@
             <el-button 
             v-for="(payWay, index) in payWays" 
             :key="index" 
-            v-if="isShowStored(index)"
+            v-if="isShowStored(payWay.type)"
             @click="selectPayWay(payWay.type)"
             >{{payWay.title}}</el-button>
         </div>
@@ -33,8 +33,8 @@ export default {
   methods: {
     ...mapActions(["setPayWay"]),
 
-    isShowStored(index) {
-      return index !== 3 || this.memberInfo;
+    isShowStored(payType) {
+      return payType !== this.payMethods.STORED || this.memberInfo;
     },
 
     selectPayWay(payWay) {

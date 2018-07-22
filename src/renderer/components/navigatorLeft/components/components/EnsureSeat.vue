@@ -17,7 +17,7 @@ export default {
     return {
       seatList: [],
 
-      tableInfo: ""
+      tableInfos: ""
     };
   },
 
@@ -38,7 +38,7 @@ export default {
     },
 
     selectTable(pos) {
-      this.tableInfo = this.seatList[pos];
+      this.tableInfos = this.seatList[pos];
     }
   },
 

@@ -288,7 +288,7 @@ export default {
           this.validateMember();
           break;
         case this.operationType.ensureSeat:
-          this.setTableInfo(this.$refs.ensureSeat.tableInfo);
+          this.setTableInfo(this.$refs.ensureSeat.tableInfos);
           if (this.ensureModel === 1) {
             this.switchOperation(this.operationType.ensureIdentity);
           } else {
